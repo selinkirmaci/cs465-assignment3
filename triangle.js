@@ -19,6 +19,17 @@ var count = 0;
 
 var flag = true;
 
+
+let camSpeed = 2;
+
+let MODEL_VIEW_MATRIX;
+let PROJECTION_MATRIX;
+let modelViewMatrixLoc;
+
+let camRotX1 = 0;
+let camRotY1 = 0;
+let camRotZ1 = 0;
+
 window.onload = function init()
 {
     canvas = document.getElementById( "gl-canvas" );
@@ -70,6 +81,75 @@ window.onload = function init()
         axis = zAxis;
     };
     document.getElementById("ButtonT").onclick = function(){flag = !flag;};
+
+    
+    let a = 15;
+
+
+    //zoom in and out
+    canvas.addEventListener("wheel", function (event) {
+        if (event.deltaY > 0) a++;
+            else a--;
+
+        PROJECTION_MATRIX = ortho(-a, a, -a, a, -100, 100);
+        PROJECTION_MATRIX = mult(PROJECTION_MATRIX, rotate(camRotX1, 1, 0, 0));
+        PROJECTION_MATRIX = mult(PROJECTION_MATRIX, rotate(camRotY1, 0, 1, 0));
+        PROJECTION_MATRIX = mult(PROJECTION_MATRIX, rotate(camRotZ1, 0, 0, 1));
+        gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"), false, flatten(PROJECTION_MATRIX));        
+    });
+
+    //CAmera movement around x y z
+    document.addEventListener('keydown', function (event) {
+        let camRotX = 0;
+        let camRotY = 0;
+        let camRotZ = 0;
+        if (event.key === 'w') {
+            camRotX -=camSpeed;
+            camRotX1 -=camSpeed;
+            PROJECTION_MATRIX = mult(PROJECTION_MATRIX, rotate(camRotX, 1, 0, 0));
+            gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"), false, flatten(PROJECTION_MATRIX));        
+
+        }else if(event.key === 's')
+        {
+            camRotX += camSpeed;
+            camRotX1 +=camSpeed;
+            PROJECTION_MATRIX = mult(PROJECTION_MATRIX, rotate(camRotX, 1, 0, 0));
+            gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"), false, flatten(PROJECTION_MATRIX));        
+
+        }else if(event.key === 'd')
+        {
+            camRotY -= camSpeed;
+            camRotY1 -= camSpeed;
+            PROJECTION_MATRIX = mult(PROJECTION_MATRIX, rotate(camRotY, 0, 1, 0));
+            gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"), false, flatten(PROJECTION_MATRIX));        
+        }else if(event.key === 'a')
+        {
+            camRotY += camSpeed;
+            camRotY1 += camSpeed;
+
+            PROJECTION_MATRIX = mult(PROJECTION_MATRIX, rotate(camRotY, 0, 1, 0));
+            gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"), false, flatten(PROJECTION_MATRIX));        
+        }else if(event.key === 'z')
+        {
+            camRotZ += camSpeed;
+            camRotZ1 += camSpeed;
+
+            PROJECTION_MATRIX = mult(PROJECTION_MATRIX, rotate(camRotZ, 0, 0, 1));
+            gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"), false, flatten(PROJECTION_MATRIX));        
+        }else if(event.key === 'x')
+        {
+            camRotZ -= camSpeed;
+            camRotZ1 -= camSpeed;
+
+            PROJECTION_MATRIX = mult(PROJECTION_MATRIX, rotate(camRotZ, 0, 0, 1));
+            gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"), false, flatten(PROJECTION_MATRIX));        
+        }                               
+    });
+
+    modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
+    PROJECTION_MATRIX = ortho(-15, 15, -15, 15, -100, 100);
+    gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),  false, flatten(PROJECTION_MATRIX) );
+    
         
     render();
 }
@@ -118,31 +198,43 @@ function quad(a, b, c, d)
 
     for(var i = 0; i < 360; i++)
     {
-        var radians =  i * (Math.PI/180)
+        var radians =  i * (Math.PI/180);
+        var phi = radians;
+        var pp = 2;
+        var qq = 5;
+        var rr = Math.cos(qq*phi)+2;
 
+        
         var x = Math.cos(2*radians)*(1 + 0.6*(Math.cos(5*radians)+Math.cos(10*radians)));
         var y = Math.sin(2*radians)*(1 + 0.6*(Math.cos(5*radians)+Math.cos(10*radians)));
         var z = 0.35*Math.sin(5*radians);
-
-        var temp = vec4(x,y,z,1.0);
-        colors.push(vertexColors[1]);
-        points.push(temp);
-        count++;
-
-        /*
+        
+        
         for(var j = 0; j < 360; j++)
         {
-            var xPrime = (4*x + Math.cos(j)*x);
-            var yPrime = (4*y + Math.cos(j)*y);
-            var zPrime = Math.sin(j) + z;
+            var radians1 =  j * (Math.PI/180);
+            /*
+            var xPrime = (4*x + Math.cos(radians1)*x);
+            var yPrime = (4*y + Math.cos(radians1)*y);
+            var zPrime = Math.sin(radians1) + z;
+            */
+/*
+            var xPrime = (4+Math.cos(radians1))*Math.cos(radians);
+            var yPrime = (4+Math.cos(radians1))*Math.sin(radians);
+            var zPrime = Math.sin(radians1);
+*/
+            var xPrime=(4*x+Math.cos(radians1)*x/rr);
+            var yPrime=(4*y+Math.cos(radians1)*y/rr);
+            var zPrime=Math.sin(radians1)+z/rr;
+
 
             var temp = vec4(xPrime,yPrime,zPrime,1.0);
             colors.push(vertexColors[1]);
             count++;
             points.push(temp);
-
         }
-        */
+        
+        
     }
     
 }
@@ -151,10 +243,10 @@ function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if(flag) theta[axis] += 1.0;
+    if(flag) theta[axis] += 0.0;
     gl.uniform3fv(thetaLoc, theta);
 
-    gl.drawArrays( gl.TRIANGLES, 0, count );
+    gl.drawArrays( gl.LINE_STRIP, 0, count );
 
     requestAnimFrame( render );
 }
