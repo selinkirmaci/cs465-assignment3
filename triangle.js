@@ -196,38 +196,40 @@ function adjustPoints(){
 
 }
 
-function createTorus(pp, qq1, qq2, m1) 
+function createTorus(p, q1, q2, q) 
 {
+    var vertexColors = [
+        [ 0.0, 0.0, 0.0, 1.0 ],  // black
+        [ 1.0, 0.0, 0.0, 1.0 ],  // red
+        
+    ];
     for(var i = 0; i < 360; i+=2)
     {
         var u =  i * (Math.PI/180);
-        var rr = Math.cos(m1*u)+2;
+        var rr = Math.cos(q*u)+2;
 
         
-        var x = Math.cos(pp*u)*(1 + 0.6*(Math.cos(qq1 * u)));
-        var y = Math.sin(pp*u)*(1 + 0.6*(Math.cos(qq1 * u)));
-        var z = 0.35*Math.sin(5*u);
-        /*
-        var temp = vec4(x,y,z,1);
+        var x = Math.cos(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
+        var y = Math.sin(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
+        var z = 0.35*Math.sin(q*u);
+        
+        /*var temp = vec4(x,y,z,1);
         points.push(temp);
         colors.push(vertexColors[1]);
-        count++;*/
+        */
         
         
         for(var j = 0; j <= 360; j+=36)
         {
             var v =  j * (Math.PI/180);
 
-            var xx=rr*Math.cos(pp*u);
-            var yy=rr*Math.sin(pp*u);
-            var zz=-3*Math.sin(qq1*u);
-            
-            xPrime=(4*xx+Math.cos(v)*xx/rr);
-            yPrime=(4*yy+Math.cos(v)*yy/rr);
-            zPrime=Math.sin(v)+zz/rr;
+            var xx = (8* x + Math.cos(v) * x);
+            var yy = (8* y + Math.cos(v) * y);
+            var zz = Math.sin(v) + z;
 
-            var temp = vec4(xPrime,yPrime,zPrime,1.0);
-            
+
+            var temp = vec4(xx,yy,zz,1.0);
+            colors.push(vertexColors[1]);
             points.push(temp);
         }
     }
@@ -245,6 +247,7 @@ function render()
     for(i = 0; i < outerSurfacePoints.length; i+=4){
         gl.drawArrays( gl.TRIANGLES, i, (i+3) );
     }
+    //gl.drawArrays( gl.LINE_LOOP, 0, points.length );
 
     requestAnimFrame( render );
 }
