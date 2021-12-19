@@ -5,6 +5,7 @@ var gl;
 var NumVertices  = 36;
 
 var points = [];
+var outerSurfacePoints = [];
 var colors = [];
 
 var xAxis = 0;
@@ -15,7 +16,6 @@ var axis = 0;
 var theta = [ 0, 0, 0 ];
 
 var thetaLoc;
-var count = 0;
 
 var flag = true;
 
@@ -37,7 +37,11 @@ window.onload = function init()
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
-    colorCube();
+    createTorus(2,5,10,5);
+    console.log("points.length = " + points.length);
+    adjustPoints();
+    console.log("outerSurfacePoints.length = " + outerSurfacePoints.length);
+
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
@@ -60,7 +64,7 @@ window.onload = function init()
 
     var vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW );
     
 
     var vPosition = gl.getAttribLocation( program, "vPosition" );
@@ -147,94 +151,85 @@ window.onload = function init()
     });
 
     modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
-    PROJECTION_MATRIX = ortho(-15, 15, -15, 15, -100, 100);
+    PROJECTION_MATRIX = ortho(-5, 5, -5, 5, -100, 100);
     gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),  false, flatten(PROJECTION_MATRIX) );
-    
         
     render();
 }
-
-function colorCube()
-{
-    quad( 1, 0, 3, 2 );
-    quad( 2, 3, 7, 6 );
-    quad( 3, 0, 4, 7 );
-    quad( 6, 5, 1, 2 );
-    quad( 4, 5, 6, 7 );
-    quad( 5, 4, 0, 1 );
-}
-
-function quad(a, b, c, d) 
-{
-    var vertices = [
-        vec4( -0.5, -0.5,  0.5, 1.0 ),
-        vec4( -0.5,  0.5,  0.5, 1.0 ),
-        vec4(  0.5,  0.5,  0.5, 1.0 ),
-        vec4(  0.5, -0.5,  0.5, 1.0 ),
-        vec4( -0.5, -0.5, -0.5, 1.0 ),
-        vec4( -0.5,  0.5, -0.5, 1.0 ),
-        vec4(  0.5,  0.5, -0.5, 1.0 ),
-        vec4(  0.5, -0.5, -0.5, 1.0 )
-    ];
-
+//creates the outer surface of torus knot 
+function adjustPoints(){
     var vertexColors = [
         [ 0.0, 0.0, 0.0, 1.0 ],  // black
         [ 1.0, 0.0, 0.0, 1.0 ],  // red
-        [ 1.0, 1.0, 0.0, 1.0 ],  // yellow
-        [ 0.0, 1.0, 0.0, 1.0 ],  // green
-        [ 0.0, 0.0, 1.0, 1.0 ],  // blue
-        [ 1.0, 0.0, 1.0, 1.0 ],  // magenta
-        [ 0.0, 1.0, 1.0, 1.0 ],  // cyan
-        [ 1.0, 1.0, 1.0, 1.0 ]   // white
+        
     ];
 
-    // We need to parition the quad into two triangles in order for
-    // WebGL to be able to render it.  In this case, we create two
-    // triangles from the quad indices
+    for(i = 0; i < points.length - 12; i++){
+        outerSurfacePoints.push(points[i]);
+        outerSurfacePoints.push(points[i + 1]);
+        outerSurfacePoints.push(points[i + 11]);
+        outerSurfacePoints.push(points[i + 12]);
+        colors.push(vertexColors[1]);
+        colors.push(vertexColors[1]);
+        colors.push(vertexColors[1]);
+        colors.push(vertexColors[1]);
+    }
     
-    //vertex color assigned by the index of the vertex
-    
-    var indices = [ a, b, c, a, c, d ];
+    for(i = 11; i>1; i--){
+        outerSurfacePoints.push(points[points.length - i]);
+        outerSurfacePoints.push(points[points.length - i + 1]);
+        outerSurfacePoints.push(points[11 - i]);
+        outerSurfacePoints.push(points[12 - i]);
+        colors.push(vertexColors[1]);
+        colors.push(vertexColors[1]);
+        colors.push(vertexColors[1]);
+        colors.push(vertexColors[1]);
+    }
+    outerSurfacePoints.push(points[points.length - 1]);
+    outerSurfacePoints.push(points[points.length - 11]);
+    outerSurfacePoints.push(points[10]);
+    outerSurfacePoints.push(points[11]);
+    colors.push(vertexColors[1]);
+    colors.push(vertexColors[1]);
+    colors.push(vertexColors[1]);
+    colors.push(vertexColors[1]);
 
-    for(var i = 0; i < 360; i++)
+}
+
+function createTorus(pp, qq1, qq2, m1) 
+{
+    for(var i = 0; i < 360; i+=2)
     {
-        var radians =  i * (Math.PI/180);
-        var phi = radians;
-        var pp = 2;
-        var qq = 5;
-        var rr = Math.cos(qq*phi)+2;
+        var u =  i * (Math.PI/180);
+        var rr = Math.cos(m1*u)+2;
 
         
-        var x = Math.cos(2*radians)*(1 + 0.6*(Math.cos(5*radians)+Math.cos(10*radians)));
-        var y = Math.sin(2*radians)*(1 + 0.6*(Math.cos(5*radians)+Math.cos(10*radians)));
-        var z = 0.35*Math.sin(5*radians);
+        var x = Math.cos(pp*u)*(1 + 0.6*(Math.cos(qq1 * u)));
+        var y = Math.sin(pp*u)*(1 + 0.6*(Math.cos(qq1 * u)));
+        var z = 0.35*Math.sin(5*u);
+        /*
+        var temp = vec4(x,y,z,1);
+        points.push(temp);
+        colors.push(vertexColors[1]);
+        count++;*/
         
         
-        for(var j = 0; j < 360; j++)
+        for(var j = 0; j <= 360; j+=36)
         {
-            var radians1 =  j * (Math.PI/180);
-            /*
-            var xPrime = (4*x + Math.cos(radians1)*x);
-            var yPrime = (4*y + Math.cos(radians1)*y);
-            var zPrime = Math.sin(radians1) + z;
-            */
-/*
-            var xPrime = (4+Math.cos(radians1))*Math.cos(radians);
-            var yPrime = (4+Math.cos(radians1))*Math.sin(radians);
-            var zPrime = Math.sin(radians1);
-*/
-            var xPrime=(4*x+Math.cos(radians1)*x/rr);
-            var yPrime=(4*y+Math.cos(radians1)*y/rr);
-            var zPrime=Math.sin(radians1)+z/rr;
+            var v =  j * (Math.PI/180);
 
+            var xx=rr*Math.cos(pp*u);
+            var yy=rr*Math.sin(pp*u);
+            var zz=-3*Math.sin(qq1*u);
+            
+            xPrime=(4*xx+Math.cos(v)*xx/rr);
+            yPrime=(4*yy+Math.cos(v)*yy/rr);
+            zPrime=Math.sin(v)+zz/rr;
 
             var temp = vec4(xPrime,yPrime,zPrime,1.0);
-            colors.push(vertexColors[1]);
-            count++;
+            
             points.push(temp);
         }
-        
-        
     }
     
 }
@@ -246,7 +241,10 @@ function render()
     if(flag) theta[axis] += 0.0;
     gl.uniform3fv(thetaLoc, theta);
 
-    gl.drawArrays( gl.LINE_STRIP, 0, count );
+    
+    for(i = 0; i < outerSurfacePoints.length; i+=4){
+        gl.drawArrays( gl.TRIANGLES, i, (i+3) );
+    }
 
     requestAnimFrame( render );
 }

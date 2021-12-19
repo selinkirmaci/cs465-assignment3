@@ -7,6 +7,7 @@
     varying vec4 fColor;
     
     uniform vec3 theta;
+    uniform mat4 projectionMatrix;
     
     void main() 
     {
@@ -34,7 +35,7 @@
             0.0,  0.0, 0.0, 1.0 );
     
         fColor = vColor;
-        gl_Position = rz * ry * rx * vPosition;
+        gl_Position = projectionMatrix * rz * ry * rx * vPosition;
     } 
     </script>
     
@@ -74,8 +75,7 @@ body {
 }
 </style>
 
-<script src="resources/jquery.3.2.1.min.js"></script>
-<script src="resources/underscore.js"></script>
+
 
 <script type="text/javascript" src="Common/webgl-utils.js"></script>
 <script type="text/javascript" src="Common/initShaders.js"></script>
