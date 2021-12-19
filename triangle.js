@@ -198,36 +198,33 @@ function quad(a, b, c, d)
 
     for(var i = 0; i < 360; i++)
     {
-        var radians =  i * (Math.PI/180);
+        var u =  i * (Math.PI/180);
         var phi = radians;
         var pp = 2;
         var qq = 5;
         var rr = Math.cos(qq*phi)+2;
 
         
-        var x = Math.cos(2*radians)*(1 + 0.6*(Math.cos(5*radians)+Math.cos(10*radians)));
-        var y = Math.sin(2*radians)*(1 + 0.6*(Math.cos(5*radians)+Math.cos(10*radians)));
+        var x = Math.cos(2*radians)*(1 + 0.6*(Math.cos(5*radians)+0.75*Math.cos(10*radians)));
+        var y = Math.sin(2*radians)*(1 + 0.6*(Math.cos(5*radians)+0.75*Math.cos(10*radians)));
         var z = 0.35*Math.sin(5*radians);
+
+        var temp = vec4(x,y,z,1.0);
+            colors.push(vertexColors[3]);
+            count++;
+            points.push(temp);
         
         
         for(var j = 0; j < 360; j++)
         {
-            var radians1 =  j * (Math.PI/180);
-            /*
-            var xPrime = (4*x + Math.cos(radians1)*x);
-            var yPrime = (4*y + Math.cos(radians1)*y);
-            var zPrime = Math.sin(radians1) + z;
-            */
-/*
-            var xPrime = (4+Math.cos(radians1))*Math.cos(radians);
-            var yPrime = (4+Math.cos(radians1))*Math.sin(radians);
-            var zPrime = Math.sin(radians1);
-*/
-            var xPrime=(4*x+Math.cos(radians1)*x/rr);
-            var yPrime=(4*y+Math.cos(radians1)*y/rr);
-            var zPrime=Math.sin(radians1)+z/rr;
-
-
+            var v =  j * (Math.PI/180);
+            
+            
+            var xPrime =  4*Math.cos(2*u)*(1+0.6*(Math.cos(5*u)+0.75*Math.cos(10*u)))+Math.cos(v)*Math.cos(2*u)*(1+0.6*(Math.cos(5*u)+0.75*Math.cos(10*u)));
+            var yPrime = 4*Math.sin(2*u)*(1+0.6*(Math.cos(5*u)+0.75*Math.cos(10*u)))+Math.cos(v)*Math.sin(2*u)*(1+0.6*(Math.cos(5*u)+0.75*Math.cos(10*u)));
+            var zPrime =  Math.sin(v)+0.35*Math.sin(5*u);
+            
+            
             var temp = vec4(xPrime,yPrime,zPrime,1.0);
             colors.push(vertexColors[1]);
             count++;
@@ -245,7 +242,7 @@ function render()
 
     if(flag) theta[axis] += 0.0;
     gl.uniform3fv(thetaLoc, theta);
-
+    
     gl.drawArrays( gl.LINE_STRIP, 0, count );
 
     requestAnimFrame( render );
