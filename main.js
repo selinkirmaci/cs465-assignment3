@@ -31,7 +31,7 @@ let camRotZ1 = 0;
 
 let buttonMode = 0;
 
-var eye = vec3(1.0,0.0,0.0);
+var eye = vec3(1.0,1.0,1.0);
 var at = vec3(0.0, 0.0, 0.0);
 var up = vec3(0.0, 1.0, 0.0);
 
@@ -40,12 +40,8 @@ let a = 15;
 
 //lighting variables
 
-var va = vec4(0.0, 0.0, -1.0,1);
-var vb = vec4(0.0, 0.942809, 0.333333, 1);
-var vc = vec4(-0.816497, -0.471405, 0.333333, 1);
-var vd = vec4(0.816497, -0.471405, 0.333333,1);
     
-var lightPosition = vec4(1.0, 1.0, 0.0, 0.0 );
+var lightPosition = vec4(1.0, 0.0, 0.0, 0.0 );
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
 var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
 var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -136,7 +132,6 @@ window.onload = function init()
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
 
     modelViewMatrix = lookAt(eye, at , up);
-
 
     
     ambientProduct = mult(lightAmbient, materialAmbient);
@@ -301,6 +296,9 @@ function render()
 
     //projectionMatrix = ortho(-a, a, -a, a, -100, 100);
 
+    //eye = vec3(camRotX1,camRotY1,camRotZ1);
+
+    //modelViewMatrix = lookAt(eye,at,up);
     modelViewMatrix = mat4();
     modelViewMatrix = mult(modelViewMatrix, rotate(camRotX1, [1, 0, 0] ));
     modelViewMatrix = mult(modelViewMatrix, rotate(camRotY1, [0, 1, 0] ));
