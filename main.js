@@ -31,7 +31,7 @@ let camRotZ1 = 0;
 
 let buttonMode = 0;
 
-var eye = vec3(1.0,0.0,0.0);
+var eye = vec3(1.0,1.0,1.0);
 var at = vec3(0.0, 0.0, 1.0);
 var up = vec3(0.0, 1.0, 0.0);
 
@@ -45,7 +45,7 @@ var vb = vec4(0.0, 0.942809, 0.333333, 1);
 var vc = vec4(-0.816497, -0.471405, 0.333333, 1);
 var vd = vec4(0.816497, -0.471405, 0.333333,1);
     
-var lightPosition = vec4(1.0, 1.0, 1.0, 0.0 );
+var lightPosition = vec4(0.0, 0.0, 1.0, 0.0 );
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
 var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
 var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -135,6 +135,9 @@ window.onload = function init()
     projectionMatrix = ortho(-15, 15, -15, 15, -100, 100);
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
 
+    modelViewMatrix = lookAt(eye, at , up);
+
+
     
     ambientProduct = mult(lightAmbient, materialAmbient);
     diffuseProduct = mult(lightDiffuse, materialDiffuse);
@@ -181,10 +184,14 @@ window.onload = function init()
             else a--;
 
         projectionMatrix = ortho(-a, a, -a, a, -100, 100);
-        projectionMatrix = mult(projectionMatrix, rotate(camRotX1, 1, 0, 0));
-        projectionMatrix = mult(projectionMatrix, rotate(camRotY1, 0, 1, 0));
-        projectionMatrix = mult(projectionMatrix, rotate(camRotZ1, 0, 0, 1));
+        /*
+        modelViewMatrix = mult(modelViewMatrix, rotate(camRotX1, 1, 0, 0));
+        modelViewMatrix = mult(modelViewMatrix, rotate(camRotY1, 0, 1, 0));
+        modelViewMatrix = mult(modelViewMatrix, rotate(camRotZ1, 0, 0, 1));
+        */
         gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+
+        gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
     });
 
     //CAmera movement around x y z
@@ -195,43 +202,43 @@ window.onload = function init()
         if (event.key === 'w') {
             camRotX -=camSpeed;
             camRotX1 -=camSpeed;
-            projectionMatrix = mult(projectionMatrix, rotate(camRotX, 1, 0, 0));
-            gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+            modelViewMatrix = mult(modelViewMatrix, rotate(camRotX, 1, 0, 0));
+            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
 
         }else if(event.key === 's')
         {
             camRotX += camSpeed;
             camRotX1 +=camSpeed;
-            projectionMatrix = mult(projectionMatrix, rotate(camRotX, 1, 0, 0));
-            gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+            modelViewMatrix = mult(modelViewMatrix, rotate(camRotX, 1, 0, 0));
+            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
 
         }else if(event.key === 'd')
         {
             camRotY -= camSpeed;
             camRotY1 -= camSpeed;
-            projectionMatrix = mult(projectionMatrix, rotate(camRotY, 0, 1, 0));
-            gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+            modelViewMatrix = mult(modelViewMatrix, rotate(camRotY, 0, 1, 0));
+            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
         }else if(event.key === 'a')
         {
             camRotY += camSpeed;
             camRotY1 += camSpeed;
 
-            projectionMatrix = mult(projectionMatrix, rotate(camRotY, 0, 1, 0));
-            gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+            modelViewMatrix = mult(modelViewMatrix, rotate(camRotY, 0, 1, 0));
+            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
         }else if(event.key === 'z')
         {
             camRotZ += camSpeed;
             camRotZ1 += camSpeed;
 
-            projectionMatrix = mult(projectionMatrix, rotate(camRotZ, 0, 0, 1));
-            gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+            modelViewMatrix = mult(modelViewMatrix, rotate(camRotZ, 0, 0, 1));
+            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
         }else if(event.key === 'x')
         {
             camRotZ -= camSpeed;
             camRotZ1 -= camSpeed;
 
-            projectionMatrix = mult(projectionMatrix, rotate(camRotZ, 0, 0, 1));
-            gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+            modelViewMatrix = mult(modelViewMatrix, rotate(camRotZ, 0, 0, 1));
+            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
         }                               
     });
 
@@ -241,28 +248,33 @@ window.onload = function init()
 }
 
 function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
+    
+    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1],points[number_of_points_on_each_circle - 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle]);
+
+    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle] , points[0] , points[number_of_points_on_each_circle - 1]);
+    
+
+
+    for(i = 0; i < 10; i++){
+        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],points[i],points[i + 1]);
+        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],points[i]);
+    }
     for(i = 0; i < number_of_points_on_knot_curve - 1; i++){
         for(j = 0; j < number_of_points_on_each_circle - 1; j++){
 
-            triangle(points[i*number_of_points_on_each_circle + j],points[i*number_of_points_on_each_circle + j+1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
 
             triangle(points[i*number_of_points_on_each_circle + j+1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1]);
+            triangle(points[i*number_of_points_on_each_circle + j],points[i*number_of_points_on_each_circle + j+1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
+
         }
-        triangle(points[i*number_of_points_on_each_circle + j],points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle]);
         triangle(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],points[i*number_of_points_on_each_circle + j + 1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
+
+        triangle(points[i*number_of_points_on_each_circle + j],points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle]);
     }
     // son halkayı baştakine bağlama
-    for(i = 0; i < 10; i++){
-        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],points[i]);
-        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],points[i],points[i + 1]);
-    }
-    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle],points[number_of_points_on_each_circle - 1]);
-    //triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle],points[0]),points[number_of_points_on_each_circle - 1];
-    /*
-    outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle])
-    outerSurfacePoints.push(points[0])
-    outerSurfacePoints.push(points[number_of_points_on_each_circle - 1])
-    */
+   
+ 
+    
 }
 
 function createTorus(p, q1, q2, q) 
@@ -297,7 +309,9 @@ function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    modelViewMatrix = lookAt(eye, at , up);
+
+    //modelViewMatrix = lookAt(eye, at , up);
+    
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
 
     //projectionMatrix = ortho(-a, a, -a, a, -100, 100);
@@ -319,7 +333,7 @@ function render()
         gl.drawArrays( gl.TRIANGLE_STRIP, 0, outerSurfacePoints.length );
 
 
-    requestAnimFrame( render );
+    window.requestAnimFrame( render );
 }
 
 
