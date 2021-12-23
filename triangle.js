@@ -1,4 +1,3 @@
-
 var canvas;
 var gl;
 
@@ -40,8 +39,7 @@ window.onload = function init()
     createTorus(2,5,10,5);
     console.log("points.length = " + points.length);
     adjustPoints();
-    console.log("outerSurfacePoints.length = " + outerSurfacePoints.length);
-
+    
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
@@ -156,80 +154,66 @@ window.onload = function init()
         
     render();
 }
-//creates the outer surface of torus knot 
 function adjustPoints(){
-    var vertexColors = [
-        [ 0.0, 0.0, 0.0, 1.0 ],  // black
-        [ 1.0, 0.0, 0.0, 1.0 ],  // red
-        
-    ];
+    for(i = 0; i < 179; i++){
+        for(j = 0; j < 10; j++){
+            outerSurfacePoints.push(points[i*11 + j]);
+            outerSurfacePoints.push(points[i*11 + j+1]);
+            outerSurfacePoints.push(points[i*11 + j+11]);
 
-    for(i = 0; i < points.length - 12; i++){
+            outerSurfacePoints.push(points[i*11 + j+1]);
+            outerSurfacePoints.push(points[i*11 + j+11]);
+            outerSurfacePoints.push(points[i*11 + j+12]);
+        }
+        outerSurfacePoints.push(points[i*11 + j]); // j = 10 yani çemberdeki 11. nokta  yani indexi 10
+        outerSurfacePoints.push(points[i*11 + j - 10]); // index 0
+        outerSurfacePoints.push(points[i*11 + j + 11]);
+
+        outerSurfacePoints.push(points[i*11 + j - 10]);
+        outerSurfacePoints.push(points[i*11 + j + 1]);
+        outerSurfacePoints.push(points[i*11 + j+11]);
+    }
+    // son halkayı baştakine bağlama
+    for(i = 0; i < 10; i++){
+        outerSurfacePoints.push(points[179 * 11 + i]);
+        outerSurfacePoints.push(points[179 * 11 + i + 1]);
+        outerSurfacePoints.push(points[i]);
+
+        outerSurfacePoints.push(points[179 * 11 + i + 1]);
         outerSurfacePoints.push(points[i]);
         outerSurfacePoints.push(points[i + 1]);
-        outerSurfacePoints.push(points[i + 11]);
-        outerSurfacePoints.push(points[i + 12]);
-        colors.push(vertexColors[1]);
-        colors.push(vertexColors[1]);
-        colors.push(vertexColors[1]);
-        colors.push(vertexColors[1]);
     }
-    
-    for(i = 11; i>1; i--){
-        outerSurfacePoints.push(points[points.length - i]);
-        outerSurfacePoints.push(points[points.length - i + 1]);
-        outerSurfacePoints.push(points[11 - i]);
-        outerSurfacePoints.push(points[12 - i]);
-        colors.push(vertexColors[1]);
-        colors.push(vertexColors[1]);
-        colors.push(vertexColors[1]);
-        colors.push(vertexColors[1]);
-    }
-    outerSurfacePoints.push(points[points.length - 1]);
-    outerSurfacePoints.push(points[points.length - 11]);
-    outerSurfacePoints.push(points[10]);
-    outerSurfacePoints.push(points[11]);
-    colors.push(vertexColors[1]);
-    colors.push(vertexColors[1]);
-    colors.push(vertexColors[1]);
-    colors.push(vertexColors[1]);
+    outerSurfacePoints.push(points[179 * 11 + 10])
+    outerSurfacePoints.push(points[179 * 11])
+    outerSurfacePoints.push(points[10])
 
+    outerSurfacePoints.push(points[179 * 11])
+    outerSurfacePoints.push(points[0])
+    outerSurfacePoints.push(points[10])
 }
 
 function createTorus(p, q1, q2, q) 
 {
-    var vertexColors = [
-        [ 0.0, 0.0, 0.0, 1.0 ],  // black
-        [ 1.0, 0.0, 0.0, 1.0 ],  // red
-        
-    ];
-    for(var i = 0; i < 360; i+=2)
+    var u, v, x, y, z, xx, yy, zz, temp = vec4();
+    for(i = 0; i < 360; i+=2)
     {
-        var u =  i * (Math.PI/180);
-        var rr = Math.cos(q*u)+2;
-
+        u =  i * (Math.PI/180);
         
-        var x = Math.cos(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
-        var y = Math.sin(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
-        var z = 0.35*Math.sin(q*u);
-        
-        /*var temp = vec4(x,y,z,1);
-        points.push(temp);
-        colors.push(vertexColors[1]);
-        */
+        x = Math.cos(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
+        y = Math.sin(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
+        z = 0.35*Math.sin(q*u);
         
         
-        for(var j = 0; j <= 360; j+=36)
+        for(j = 0; j <= 360; j+=36)
         {
-            var v =  j * (Math.PI/180);
+            v =  j * (Math.PI/180);
+            
+            xx = (4 * x + Math.cos(v) * x);
+            yy = (4 * y + Math.cos(v) * y);
+            zz = Math.sin(v) + z;
 
-            var xx = (8* x + Math.cos(v) * x);
-            var yy = (8* y + Math.cos(v) * y);
-            var zz = Math.sin(v) + z;
 
-
-            var temp = vec4(xx,yy,zz,1.0);
-            colors.push(vertexColors[1]);
+            temp = vec4(xx,yy,zz,1.0);
             points.push(temp);
         }
     }
@@ -244,11 +228,9 @@ function render()
     gl.uniform3fv(thetaLoc, theta);
 
     
-    for(i = 0; i < outerSurfacePoints.length; i+=4){
-        gl.drawArrays( gl.TRIANGLES, i, (i+3) );
-    }
-    //gl.drawArrays( gl.LINE_LOOP, 0, points.length );
+    gl.drawArrays( gl.LINE_LOOP, 0, outerSurfacePoints.length );
 
     requestAnimFrame( render );
 }
+
 
