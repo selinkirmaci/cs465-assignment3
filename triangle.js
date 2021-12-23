@@ -37,7 +37,7 @@ window.onload = function init()
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
-    createTorus(2,5,10,5);
+    createTorus(2, 5, 10, 5, 0.6, 0.75, 0.35);
     console.log("points.length = " + points.length);
     adjustPoints(180,11);
     
@@ -195,16 +195,16 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
     outerSurfacePoints.push(points[number_of_points_on_each_circle - 1])
 }
 
-function createTorus(p, q1, q2, q) 
+function createTorus(p, q1, q2, m1,r1,r2,s1) 
 {
     var u, v, x, y, z, xx, yy, zz, temp = vec4();
     for(i = 0; i < 360; i+=2)
     {
         u =  i * (Math.PI/180);
         
-        x = Math.cos(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
-        y = Math.sin(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
-        z = 0.35*Math.sin(q*u);
+        x = Math.cos(p*u)*(1 + r1*(Math.cos(q1 * u) + r2 * Math.cos(q2 * u)));
+        y = Math.sin(p*u)*(1 + r1*(Math.cos(q1 * u) + r2 * Math.cos(q2 * u)));
+        z = s1*Math.sin(m1*u);
         
         
         for(j = 0; j <= 360; j+=36)
