@@ -31,8 +31,8 @@ let camRotZ1 = 0;
 
 let buttonMode = 0;
 
-var eye = vec3(1.0,1.0,1.0);
-var at = vec3(0.0, 0.0, 1.0);
+var eye = vec3(1.0,0.0,0.0);
+var at = vec3(0.0, 0.0, 0.0);
 var up = vec3(0.0, 1.0, 0.0);
 
 let a = 15;
@@ -45,7 +45,7 @@ var vb = vec4(0.0, 0.942809, 0.333333, 1);
 var vc = vec4(-0.816497, -0.471405, 0.333333, 1);
 var vd = vec4(0.816497, -0.471405, 0.333333,1);
     
-var lightPosition = vec4(0.0, 0.0, 1.0, 0.0 );
+var lightPosition = vec4(1.0, 1.0, 0.0, 0.0 );
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
 var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
 var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -248,33 +248,27 @@ window.onload = function init()
 }
 
 function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
-    
-    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1],points[number_of_points_on_each_circle - 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle]);
 
+    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1],points[number_of_points_on_each_circle - 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle]);
     triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle] , points[0] , points[number_of_points_on_each_circle - 1]);
-    
 
 
     for(i = 0; i < 10; i++){
-        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],points[i],points[i + 1]);
-        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],points[i]);
+        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],points[i], points[i + 1]);
+        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1], points[i]);
     }
+
     for(i = 0; i < number_of_points_on_knot_curve - 1; i++){
         for(j = 0; j < number_of_points_on_each_circle - 1; j++){
 
-
-            triangle(points[i*number_of_points_on_each_circle + j+1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1]);
-            triangle(points[i*number_of_points_on_each_circle + j],points[i*number_of_points_on_each_circle + j+1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
-
+            triangle(points[i*number_of_points_on_each_circle + j] , points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle], points[i*number_of_points_on_each_circle + j+1]);
+            triangle(points[i*number_of_points_on_each_circle + j+1] , points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle], points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1]);
+             
         }
-        triangle(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],points[i*number_of_points_on_each_circle + j + 1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
+        triangle(points[i*number_of_points_on_each_circle + j],points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle],points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]);
+        triangle(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],points[i*number_of_points_on_each_circle + j + 1]);
 
-        triangle(points[i*number_of_points_on_each_circle + j],points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle]);
-    }
-    // son halkayı baştakine bağlama
-   
- 
-    
+    }    
 }
 
 function createTorus(p, q1, q2, q) 
@@ -293,8 +287,8 @@ function createTorus(p, q1, q2, q)
         {
             v =  j * (Math.PI/180);
             
-            xx = (10 * x + Math.cos(v) * x);
-            yy = (10 * y + Math.cos(v) * y);
+            xx = (4 * x + Math.cos(v) * x);
+            yy = (4 * y + Math.cos(v) * y);
             zz = Math.sin(v) + z;
 
 
