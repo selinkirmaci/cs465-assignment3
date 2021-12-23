@@ -17,6 +17,7 @@ var theta = [ 0, 0, 0 ];
 var thetaLoc;
 
 var flag = true;
+var lines = true;
 
 
 let camSpeed = 2;
@@ -83,6 +84,7 @@ window.onload = function init()
         axis = zAxis;
     };
     document.getElementById("ButtonT").onclick = function(){flag = !flag;};
+    document.getElementById("ButtonSwap").onclick = function(){lines = !lines;};
 
     
     let a = 15;
@@ -228,8 +230,14 @@ function render()
     if(flag) theta[axis] += 0.0;
     gl.uniform3fv(thetaLoc, theta);
 
-    
-    gl.drawArrays( gl.LINE_LOOP, 0, outerSurfacePoints.length );
+    if(lines){
+        gl.drawArrays( gl.LINE_LOOP, 0, outerSurfacePoints.length );
+    }
+    else{
+        for(i = 0; i < outerSurfacePoints.length; i += 3){
+            gl.drawArrays( gl.TRIANGLES, i, i+3 );
+        }
+    }
 
     requestAnimFrame( render );
 }
