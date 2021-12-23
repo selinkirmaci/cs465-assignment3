@@ -38,7 +38,7 @@ window.onload = function init()
 
     createTorus(2,5,10,5);
     console.log("points.length = " + points.length);
-    adjustPoints();
+    adjustPoints(180,11);
     
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
@@ -154,42 +154,43 @@ window.onload = function init()
         
     render();
 }
-function adjustPoints(){
-    for(i = 0; i < 179; i++){
-        for(j = 0; j < 10; j++){
-            outerSurfacePoints.push(points[i*11 + j]);
-            outerSurfacePoints.push(points[i*11 + j+1]);
-            outerSurfacePoints.push(points[i*11 + j+11]);
 
-            outerSurfacePoints.push(points[i*11 + j+1]);
-            outerSurfacePoints.push(points[i*11 + j+11]);
-            outerSurfacePoints.push(points[i*11 + j+12]);
+function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
+    for(i = 0; i < number_of_points_on_knot_curve - 1; i++){
+        for(j = 0; j < number_of_points_on_each_circle - 1; j++){
+            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j]);
+            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+1]);
+            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
+
+            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+1]);
+            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
+            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1]);
         }
-        outerSurfacePoints.push(points[i*11 + j]); // j = 10 yani çemberdeki 11. nokta  yani indexi 10
-        outerSurfacePoints.push(points[i*11 + j - 10]); // index 0
-        outerSurfacePoints.push(points[i*11 + j + 11]);
+        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j]); // j = 10 yani çemberdeki 11. nokta  yani indexi 10
+        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]); // index 0
+        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle]);
 
-        outerSurfacePoints.push(points[i*11 + j - 10]);
-        outerSurfacePoints.push(points[i*11 + j + 1]);
-        outerSurfacePoints.push(points[i*11 + j+11]);
+        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]);
+        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j + 1]);
+        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
     }
     // son halkayı baştakine bağlama
     for(i = 0; i < 10; i++){
-        outerSurfacePoints.push(points[179 * 11 + i]);
-        outerSurfacePoints.push(points[179 * 11 + i + 1]);
+        outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i]);
+        outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
         outerSurfacePoints.push(points[i]);
 
-        outerSurfacePoints.push(points[179 * 11 + i + 1]);
+        outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
         outerSurfacePoints.push(points[i]);
         outerSurfacePoints.push(points[i + 1]);
     }
-    outerSurfacePoints.push(points[179 * 11 + 10])
-    outerSurfacePoints.push(points[179 * 11])
-    outerSurfacePoints.push(points[10])
+    outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1])
+    outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle])
+    outerSurfacePoints.push(points[number_of_points_on_each_circle - 1])
 
-    outerSurfacePoints.push(points[179 * 11])
+    outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle])
     outerSurfacePoints.push(points[0])
-    outerSurfacePoints.push(points[10])
+    outerSurfacePoints.push(points[number_of_points_on_each_circle - 1])
 }
 
 function createTorus(p, q1, q2, q) 
