@@ -184,14 +184,7 @@ window.onload = function init()
             else a--;
 
         projectionMatrix = ortho(-a, a, -a, a, -100, 100);
-        /*
-        modelViewMatrix = mult(modelViewMatrix, rotate(camRotX1, 1, 0, 0));
-        modelViewMatrix = mult(modelViewMatrix, rotate(camRotY1, 0, 1, 0));
-        modelViewMatrix = mult(modelViewMatrix, rotate(camRotZ1, 0, 0, 1));
-        */
         gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
-
-        gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
     });
 
     //CAmera movement around x y z
@@ -303,12 +296,15 @@ function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-
-    //modelViewMatrix = lookAt(eye, at , up);
     
-    gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
+    //gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
 
     //projectionMatrix = ortho(-a, a, -a, a, -100, 100);
+
+    modelViewMatrix = mat4();
+    modelViewMatrix = mult(modelViewMatrix, rotate(camRotX1, [1, 0, 0] ));
+    modelViewMatrix = mult(modelViewMatrix, rotate(camRotY1, [0, 1, 0] ));
+    modelViewMatrix = mult(modelViewMatrix, rotate(camRotZ1, [0, 0, 1] ));
 
 
     normalMatrix = [
