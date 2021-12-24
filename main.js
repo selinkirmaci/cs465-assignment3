@@ -1,11 +1,15 @@
 var canvas;
 var gl;
+var program;
+
+var vBuffer,nBuffer;
 
 var NumVertices  = 36;
 
 var points = [];
 var outerSurfacePoints = [];
 var normalsArray = [];
+var pathArray = [];
 var colors = [];
 
 var xAxis = 0;
@@ -13,6 +17,8 @@ var yAxis = 1;
 var zAxis = 2;
 
 var axis = 0;
+
+var radius = 4;
 
 
 var flag = true;
@@ -41,13 +47,13 @@ let a = 15;
 //lighting variables
 
     
-var lightPosition = vec4(1.0, .0, .0, 0.0 );
-var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
+var lightPosition = vec4(1.0, 1.0, 1.0, 0.0 );
+var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );  //shadow of the shape
 var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
 var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
 
-var materialAmbient = vec4( 1.0, 0.0, 1.0, 1.0 );
-var materialDiffuse = vec4( 1.0, 0.8, 0.0, 1.0 );
+var materialAmbient = vec4( 0.0, 0.0, 1.0, 1.0 );  //pink? is this the color?
+var materialDiffuse = vec4( 0.0, 0.0, 1.0, 1.0 );  //color of the shape
 var materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
 var materialShininess = 20.0;
 
@@ -82,21 +88,25 @@ window.onload = function init()
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
-    createTorus(2,5,10,5);
+    createTorus(2,5,10,5,radius);
     console.log("points.length = " + points.length);
     adjustPoints(180,11);
+
+    createPath(2,5,10,5);
+
     
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
+    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
     
     gl.enable(gl.DEPTH_TEST);
 
     //
-    //  Load shaders and initialize attribute buffers
+    //  Load shaders and initialize attribute buffers for shading per vertex
     //
-    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
+    program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
+
     
     var nBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
@@ -114,7 +124,7 @@ window.onload = function init()
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vColor );
 
-    var vBuffer = gl.createBuffer();
+    vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW );
     
@@ -150,10 +160,48 @@ window.onload = function init()
      gl.uniform1f( gl.getUniformLocation(program, 
         "shininess"),materialShininess );
     
+
     //event listeners for buttons
-    
+    document.getElementById( "applyButton" ).onclick = function () {
+        
+        var value = document.getElementById("radiusInput").value;
+        //console.log(parseInt(value));
+        radius = parseInt(value);
+
+        outerSurfacePoints = [];
+        normalsArray = [];
+        points = [];
+        pathArray = [];
+
+        console.log(outerSurfacePoints.length);
+        console.log(radius);
+        console.log(outerSurfacePoints);
+
+
+        createTorus(2,5,10,5,radius);
+
+        adjustPoints(180,11);
+
+        console.log(outerSurfacePoints);
+        
+
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW );
+
+        gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
+
+        render();
+
+    };
+    document.getElementById( "pathButton" ).onclick = function () {
+        buttonMode = 3;     
+        render();
+    };
     document.getElementById( "wireframeButton" ).onclick = function () {
         console.log("wireframe");
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW );
         buttonMode = 0;
         render();
 
@@ -161,12 +209,143 @@ window.onload = function init()
     document.getElementById( "gouraudButton" ).onclick = function () {
         console.log("gouraudButton");
         buttonMode = 1;
-        render();
+        
+        canvas = document.getElementById( "gl-canvas" );
+    
+        gl = WebGLUtils.setupWebGL( canvas );
+        if ( !gl ) { alert( "WebGL isn't available" ); }
+
+        console.log("points.length = " + points.length);
+        
+
+        gl.viewport( 0, 0, canvas.width, canvas.height );
+        gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
+        
+        gl.enable(gl.DEPTH_TEST);
+
+        //
+        //  Load shaders and initialize attribute buffers for shading per vertex
+        //
+        program = initShaders( gl, "vertex-shader", "fragment-shader" );
+        gl.useProgram( program );
+
+        
+        nBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
+        
+        var vNormal = gl.getAttribLocation( program, "vNormal" );
+        gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
+        gl.enableVertexAttribArray( vNormal);
+
+        var cBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
+
+        var vColor = gl.getAttribLocation( program, "vColor" );
+        gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
+        gl.enableVertexAttribArray( vColor );
+
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW );
+        
+
+        var vPosition = gl.getAttribLocation( program, "vPosition" );
+        gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
+        gl.enableVertexAttribArray( vPosition );
+
+        modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
+        projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
+        normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
+
+        
+        projectionMatrix = ortho(-15, 15, -15, 15, -100, 100);
+        gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+
+        modelViewMatrix = lookAt(eye, at , up);
+
+        
+        ambientProduct = mult(lightAmbient, materialAmbient);
+        diffuseProduct = mult(lightDiffuse, materialDiffuse);
+        specularProduct = mult(lightSpecular, materialSpecular);
+
+
+        gl.uniform4fv( gl.getUniformLocation(program, 
+            "ambientProduct"),flatten(ambientProduct) );
+        gl.uniform4fv( gl.getUniformLocation(program, 
+            "diffuseProduct"),flatten(diffuseProduct) );
+        gl.uniform4fv( gl.getUniformLocation(program, 
+            "specularProduct"),flatten(specularProduct) );	
+        gl.uniform4fv( gl.getUniformLocation(program, 
+            "lightPosition"),flatten(lightPosition) );
+        gl.uniform1f( gl.getUniformLocation(program, 
+            "shininess"),materialShininess );
+            render();
 
     };
     document.getElementById( "phongButton" ).onclick = function () {
         console.log("phongButton");
         buttonMode = 2;
+
+        
+        canvas = document.getElementById( "gl-canvas" );
+    
+        gl = WebGLUtils.setupWebGL( canvas );
+        if ( !gl ) { alert( "WebGL isn't available" ); }
+
+        //createTorus(2,5,10,5);
+        console.log("points.length = " + points.length);
+        //adjustPoints(180,11);
+    
+        gl.viewport( 0, 0, canvas.width, canvas.height );
+        gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
+        
+        gl.enable(gl.DEPTH_TEST);
+    
+        //
+        //  Load shaders and initialize attribute buffers
+        //
+        program = initShaders( gl, "vertex-shader-phong", "fragment-shader-phong" );
+        gl.useProgram( program );
+        
+    
+        ambientProduct = mult(lightAmbient, materialAmbient);
+        diffuseProduct = mult(lightDiffuse, materialDiffuse);
+        specularProduct = mult(lightSpecular, materialSpecular);
+    
+            
+        var nBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
+        
+        var vNormal = gl.getAttribLocation( program, "vNormal" );
+        gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
+        gl.enableVertexAttribArray( vNormal);
+    
+    
+        gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW);
+        
+        var vPosition = gl.getAttribLocation( program, "vPosition");
+        gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(vPosition);
+        
+        modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
+        projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
+        normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
+    
+    
+        gl.uniform4fv( gl.getUniformLocation(program, 
+           "ambientProduct"),flatten(ambientProduct) );
+        gl.uniform4fv( gl.getUniformLocation(program, 
+           "diffuseProduct"),flatten(diffuseProduct) );
+        gl.uniform4fv( gl.getUniformLocation(program, 
+           "specularProduct"),flatten(specularProduct) );	
+        gl.uniform4fv( gl.getUniformLocation(program, 
+           "lightPosition"),flatten(lightPosition) );
+        gl.uniform1f( gl.getUniformLocation(program, 
+           "shininess"),materialShininess );
+    
         render();
     };
 
@@ -182,85 +361,84 @@ window.onload = function init()
         gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
     });
 
-    //CAmera movement around x y z
+    //Camera movement around x y z
     document.addEventListener('keydown', function (event) {
-        let camRotX = 0;
-        let camRotY = 0;
-        let camRotZ = 0;
+
+
+    gl.uniform4fv( gl.getUniformLocation(program, 
+        "lightPosition"),flatten(lightPosition) );
+
         if (event.key === 'w') {
-            camRotX -=camSpeed;
             camRotX1 -=camSpeed;
-            modelViewMatrix = mult(modelViewMatrix, rotate(camRotX, 1, 0, 0));
-            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
 
         }else if(event.key === 's')
         {
-            camRotX += camSpeed;
             camRotX1 +=camSpeed;
-            modelViewMatrix = mult(modelViewMatrix, rotate(camRotX, 1, 0, 0));
-            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
 
         }else if(event.key === 'd')
         {
-            camRotY -= camSpeed;
             camRotY1 -= camSpeed;
-            modelViewMatrix = mult(modelViewMatrix, rotate(camRotY, 0, 1, 0));
-            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
         }else if(event.key === 'a')
         {
-            camRotY += camSpeed;
             camRotY1 += camSpeed;
-
-            modelViewMatrix = mult(modelViewMatrix, rotate(camRotY, 0, 1, 0));
-            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
         }else if(event.key === 'z')
         {
-            camRotZ += camSpeed;
             camRotZ1 += camSpeed;
-
-            modelViewMatrix = mult(modelViewMatrix, rotate(camRotZ, 0, 0, 1));
-            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
         }else if(event.key === 'x')
         {
-            camRotZ -= camSpeed;
             camRotZ1 -= camSpeed;
-
-            modelViewMatrix = mult(modelViewMatrix, rotate(camRotZ, 0, 0, 1));
-            gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
         }                               
     });
-
-
         
     render();
 }
 
 function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
 
-    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1],points[number_of_points_on_each_circle - 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle]);
-    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle] , points[0] , points[number_of_points_on_each_circle - 1]);
+    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1],
+            points[number_of_points_on_each_circle - 1],
+            points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle]);
+
+    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle] , 
+            points[0] , 
+            points[number_of_points_on_each_circle - 1]);
 
 
     for(i = 0; i < 10; i++){
-        triangle(points[i], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i]);
-        triangle(points[i], points[i + 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
+       
+        triangle(points[i], 
+                points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1], 
+                points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i]);
+
+        triangle(points[i], 
+                points[i + 1],
+                points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
     }
 
     for(i = 0; i < number_of_points_on_knot_curve - 1; i++){
         for(j = 0; j < number_of_points_on_each_circle - 1; j++){
-
-            triangle(points[i*number_of_points_on_each_circle + j] , points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle], points[i*number_of_points_on_each_circle + j+1]);
-            triangle(points[i*number_of_points_on_each_circle + j+1] , points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle], points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1]);
-             
+            
+            triangle(points[i*number_of_points_on_each_circle + j] , 
+                    points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],
+                    points[i*number_of_points_on_each_circle + j+1]);
+            
+            triangle(points[i*number_of_points_on_each_circle + j+1] , 
+                points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle], 
+                points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1]);  
         }
-        triangle(points[i*number_of_points_on_each_circle + j],points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle],points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]);
 
-        triangle(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],points[i*number_of_points_on_each_circle + j + 1]);
+        triangle(points[i*number_of_points_on_each_circle + j],
+                points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle],
+                points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]);
+
+        triangle(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],
+                points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],
+                points[i*number_of_points_on_each_circle + j + 1]);
 
     }    
 }
 
-function createTorus(p, q1, q2, q) 
+function createTorus(p, q1, q2, q, radius) 
 {
     var u, v, x, y, z, xx, yy, zz, temp = vec4();
     for(i = 0; i < 360; i+=2)
@@ -276,14 +454,33 @@ function createTorus(p, q1, q2, q)
         {
             v =  j * (Math.PI/180);
             
-            xx = (4 * x + Math.cos(v) * x);
-            yy = (4 * y + Math.cos(v) * y);
+            xx = (radius * x + Math.cos(v) * x);
+            yy = (radius * y + Math.cos(v) * y);
             zz = Math.sin(v) + z;
 
 
             temp = vec4(xx,yy,zz,1.0);
             points.push(temp);
         }
+    }
+    
+}
+
+
+function createPath(p, q1, q2, q) 
+{
+    var u, v, x, y, z, xx, yy, zz, temp = vec4();
+    for(i = 0; i < 360; i+=2)
+    {
+        u =  i * (Math.PI/180);
+        
+        x = Math.cos(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
+        y = Math.sin(p*u)*(1 + 0.6*(Math.cos(q1 * u) + 0.75 * Math.cos(q2 * u)));
+        z = 0.35*Math.sin(q*u);
+
+        temp = vec4(x,y,z,1.0);
+        pathArray.push(temp);
+
     }
     
 }
@@ -305,7 +502,6 @@ function render()
     modelViewMatrix = mult(modelViewMatrix, rotate(camRotY1, [0, 1, 0] ));
     modelViewMatrix = mult(modelViewMatrix, rotate(camRotZ1, [0, 0, 1] ));
 
-
     normalMatrix = [
         vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
         vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
@@ -319,9 +515,18 @@ function render()
     if(buttonMode === 0)
         gl.drawArrays( gl.LINE_LOOP, 0, outerSurfacePoints.length );
     else if(buttonMode === 1)
+    {
+        gl.drawArrays( gl.TRIANGLE_STRIP, 0, outerSurfacePoints.length );
+    }else if(buttonMode === 2) {
         gl.drawArrays( gl.TRIANGLE_STRIP, 0, outerSurfacePoints.length );
 
+    }else if(buttonMode === 3) {
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(pathArray), gl.STATIC_DRAW );
+        gl.drawArrays( gl.LINE_LOOP, 0, pathArray.length );
 
+    }
+        
     window.requestAnimFrame( render );
 }
 
