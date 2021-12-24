@@ -2,7 +2,7 @@ var points = [];
 var outerSurfacePoints = [];
 var colors = [];
 
-var lines = true;
+var lines = false;
 
 var canvas;
 var gl;
@@ -17,10 +17,10 @@ var theta  = 0.0;
 var phi    = 0.0;
 var dr = 5.0 * Math.PI/180.0;
 
-var left = -10.0;
-var right = 10.0;
-var ytop =10.0;
-var bottom = -10.0;
+var left = -12.0;
+var right = 12.0;
+var ytop =12.0;
+var bottom = -12.0;
 
 var va = vec4(0.0, 0.0, -1.0,1);
 var vb = vec4(0.0, 0.942809, 0.333333, 1);
@@ -51,13 +51,20 @@ var up = vec3(0.0, 1.0, 0.0);
     
 function triangle(a, b, c) {
 
-     // normals are vectors
-     
-     normalsArray.push();
-     normalsArray.push();
-     normalsArray.push();
+    var t1 = subtract(b, a);
+    var t2 = subtract(c, a);
+    var normal = normalize(cross(t2, t1));
+    normal = vec4(normal);
 
-     
+    
+    normalsArray.push(normal);
+    normalsArray.push(normal);
+    normalsArray.push(normal);
+    
+
+    outerSurfacePoints.push(a);
+    outerSurfacePoints.push(b);      
+    outerSurfacePoints.push(c);
 }
 
 window.onload = function init() {
@@ -83,7 +90,8 @@ window.onload = function init() {
     diffuseProduct = mult(lightDiffuse, materialDiffuse);
     specularProduct = mult(lightSpecular, materialSpecular);
 
-
+    createTorus(2,5,10,5,0.6,0.75,0.35);
+    adjustPoints(180,11);
 
     var nBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
@@ -111,21 +119,6 @@ window.onload = function init() {
     document.getElementById("Button3").onclick = function(){theta -= dr;};
     document.getElementById("Button4").onclick = function(){phi += dr;};
     document.getElementById("Button5").onclick = function(){phi -= dr;};
-    
-    document.getElementById("Button6").onclick = function(){
-        numTimesToSubdivide++; 
-        index = 0;
-        pointsArray = [];
-        normalsArray = []; 
-        init();
-    };
-    document.getElementById("Button7").onclick = function(){
-        if(numTimesToSubdivide) numTimesToSubdivide--;
-        index = 0;
-        pointsArray = []; 
-        normalsArray = [];
-        init();
-    };
 
 
     gl.uniform4fv( gl.getUniformLocation(program, 
@@ -254,11 +247,12 @@ function render()
     gl.uniformMatrix3fv(normalMatrixLoc, false, flatten(normalMatrix) );
         
     if(lines){
-        gl.drawArrays( gl.LINE_STRIP, 0, outerSurfacePoints );
+        gl.drawArrays( gl.LINE_STRIP, 0, outerSurfacePoints.length );
     }
     else{
-        for( var i=0; i<index; i+=3) 
-            gl.drawArrays( gl.TRIANGLE, i, 3 );
+
+        gl.drawArrays( gl.TRIANGLE_STRIP, 0, outerSurfacePoints.length );
+        
     }
 
     window.requestAnimFrame(render);
