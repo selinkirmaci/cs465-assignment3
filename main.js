@@ -84,7 +84,7 @@ window.onload = function init()
 
     createTorus(2,5,10,5);
     console.log("points.length = " + points.length);
-    adjustPoints(180,11);
+    adjustPoints(360,16);
     
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
@@ -236,16 +236,6 @@ window.onload = function init()
 }
 
 function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
-
-    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1],points[number_of_points_on_each_circle - 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle]);
-    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle] , points[0] , points[number_of_points_on_each_circle - 1]);
-
-
-    for(i = 0; i < 10; i++){
-        triangle(points[i], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i]);
-        triangle(points[i], points[i + 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
-    }
-
     for(i = 0; i < number_of_points_on_knot_curve - 1; i++){
         for(j = 0; j < number_of_points_on_each_circle - 1; j++){
 
@@ -258,12 +248,19 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
         triangle(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],points[i*number_of_points_on_each_circle + j + 1]);
 
     }    
+    for(i = 0; i < number_of_points_on_each_circle - 1; i++){
+        triangle(points[i], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i]);
+        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1], points[i], points[i + 1]);
+    }
+    triangle(points[number_of_points_on_each_circle - 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle]);
+    triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle]  , points[number_of_points_on_each_circle - 1], points[0]);
+
 }
 
 function createTorus(p, q1, q2, q) 
 {
     var u, v, x, y, z, xx, yy, zz, temp = vec4();
-    for(i = 0; i < 360; i+=2)
+    for(i = 0; i < 360; i+=1)
     {
         u =  i * (Math.PI/180);
         
@@ -272,7 +269,7 @@ function createTorus(p, q1, q2, q)
         z = 0.35*Math.sin(q*u);
         
         
-        for(j = 0; j <= 360; j+=36)
+        for(j = 0; j <= 360; j+=24)
         {
             v =  j * (Math.PI/180);
             
