@@ -26,6 +26,11 @@ var flag = true;
 
 let camSpeed = 2;
 
+var pAngle = 2;
+var q1Angle = 5;
+var q2Angle = 10;
+var qAngle = 5;
+
 let modelViewMatrix;
 let projectionMatrix;
 let projectionMatrixLoc;
@@ -43,6 +48,8 @@ var up = vec3(0.0, 1.0, 0.0);
 
 let a = 15;
 
+
+//Color Picker
 
 //lighting variables
 
@@ -88,7 +95,7 @@ window.onload = function init()
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
-    createTorus(2,5,10,5,radius);
+    createTorus(pAngle,q1Angle,q2Angle,qAngle,radius);
     console.log("points.length = " + points.length);
     adjustPoints(180,11);
 
@@ -165,8 +172,23 @@ window.onload = function init()
     document.getElementById( "applyButton" ).onclick = function () {
         
         var value = document.getElementById("radiusInput").value;
-        //console.log(parseInt(value));
-        radius = parseInt(value);
+        if(value != undefined)
+            radius = parseInt(value);
+        var pAngleValue = document.getElementById("pAngle").value;
+        if(pAngle != undefined)
+            pAngle = parseInt(pAngleValue);
+
+        var q1AngleValue = document.getElementById("q1Angle").value;
+        if(q1Angle != undefined)
+            q1Angle = parseInt(q1AngleValue);
+
+        var q2AngleValue = document.getElementById("q2Angle").value;
+        if(q2Angle != undefined)
+            q2Angle = parseInt(q2AngleValue);
+
+        var qAngleValue = document.getElementById("qAngle").value;
+        if(qAngle != undefined)
+            qAngle = parseInt(qAngleValue);
 
         outerSurfacePoints = [];
         normalsArray = [];
@@ -178,7 +200,7 @@ window.onload = function init()
         console.log(outerSurfacePoints);
 
 
-        createTorus(2,5,10,5,radius);
+        createTorus(pAngle,q1Angle,q2AngleValue,qAngle,radius);
 
         adjustPoints(180,11);
 
@@ -194,6 +216,9 @@ window.onload = function init()
         render();
 
     };
+    
+
+    
     document.getElementById( "pathButton" ).onclick = function () {
         buttonMode = 3;     
         render();
@@ -211,6 +236,7 @@ window.onload = function init()
         buttonMode = 1;
         
         canvas = document.getElementById( "gl-canvas" );
+
     
         gl = WebGLUtils.setupWebGL( canvas );
         if ( !gl ) { alert( "WebGL isn't available" ); }
@@ -349,6 +375,9 @@ window.onload = function init()
         render();
     };
 
+    document.getElementById('colorPicker').addEventListener('init', (instance) => {
+        console.log('Event: "init"', instance);
+    });
     
 
 
@@ -391,6 +420,7 @@ window.onload = function init()
     });
         
     render();
+
 }
 
 function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
