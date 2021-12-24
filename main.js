@@ -41,7 +41,7 @@ let a = 15;
 //lighting variables
 
     
-var lightPosition = vec4(1.0, 0.0, 0.0, 0.0 );
+var lightPosition = vec4(1.0, .0, .0, 0.0 );
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
 var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
 var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -242,8 +242,8 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
 
 
     for(i = 0; i < 10; i++){
-        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],points[i], points[i + 1]);
-        triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1], points[i]);
+        triangle(points[i], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1], points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i]);
+        triangle(points[i], points[i + 1],points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
     }
 
     for(i = 0; i < number_of_points_on_knot_curve - 1; i++){
@@ -254,6 +254,7 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
              
         }
         triangle(points[i*number_of_points_on_each_circle + j],points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle],points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]);
+
         triangle(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],points[i*number_of_points_on_each_circle + j + 1]);
 
     }    
