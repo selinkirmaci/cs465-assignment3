@@ -13,7 +13,7 @@ var normalsArray = [];
 var near = -10;
 var far = 10;
 var radius = 1.5;
-var theta  = 0.0;
+var theta  = 2.5;
 var phi    = 0.0;
 var dr = 5.0 * Math.PI/180.0;
 
@@ -74,7 +74,65 @@ window.onload = function init() {
     
     gl.enable(gl.DEPTH_TEST);
 
+    program = initShaders( gl, "gouraud-vertex-shader", "gouraud-fragment-shader" );
+    gl.useProgram( program );
+    ambientProduct = mult(lightAmbient, materialAmbient);
+    diffuseProduct = mult(lightDiffuse, materialDiffuse);
+    specularProduct = mult(lightSpecular, materialSpecular);
+
+    createTorus(2,5,10,5,0.6,0.75,0.35);
+    adjustPoints(180,11);
+
+    var nBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
+    
+    var vNormal = gl.getAttribLocation( program, "vNormal" );
+    gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vNormal);
+
+    var vBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW);
+    
+    var vPosition = gl.getAttribLocation( program, "vPosition");
+    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+    
+    modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
+    projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
+    normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
+
+    document.getElementById("Button0").onclick = function(){radius *= 2.0;};
+    document.getElementById("Button1").onclick = function(){radius *= 0.5;};
+    document.getElementById("Button2").onclick = function(){theta += dr;};
+    document.getElementById("Button3").onclick = function(){theta -= dr;};
+    document.getElementById("Button4").onclick = function(){phi += dr;};
+    document.getElementById("Button5").onclick = function(){phi -= dr;};
+
+
+    gl.uniform4fv( gl.getUniformLocation(program, 
+    "ambientProduct"),flatten(ambientProduct) );
+    gl.uniform4fv( gl.getUniformLocation(program, 
+    "diffuseProduct"),flatten(diffuseProduct) );
+    gl.uniform4fv( gl.getUniformLocation(program, 
+    "specularProduct"),flatten(specularProduct) );	
+    gl.uniform4fv( gl.getUniformLocation(program, 
+    "lightPosition"),flatten(lightPosition) );
+    gl.uniform1f( gl.getUniformLocation(program, 
+    "shininess"),materialShininess );
+    render();
+    
     document.getElementById("Button6").onclick = function(){
+        canvas = document.getElementById( "gl-canvas" );
+    
+        gl = WebGLUtils.setupWebGL( canvas );
+        if ( !gl ) { alert( "WebGL isn't available" ); }
+
+        gl.viewport( 0, 0, canvas.width, canvas.height );
+        gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
+        
+        gl.enable(gl.DEPTH_TEST);
         program = initShaders( gl, "gouraud-vertex-shader", "gouraud-fragment-shader" );
         gl.useProgram( program );
         ambientProduct = mult(lightAmbient, materialAmbient);
@@ -126,6 +184,15 @@ window.onload = function init() {
     
     }
     document.getElementById("Button7").onclick = function(){
+        canvas = document.getElementById( "gl-canvas" );
+    
+        gl = WebGLUtils.setupWebGL( canvas );
+        if ( !gl ) { alert( "WebGL isn't available" ); }
+
+        gl.viewport( 0, 0, canvas.width, canvas.height );
+        gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
+        
+        gl.enable(gl.DEPTH_TEST);
         program = initShaders( gl, "phong-vertex-shader", "phong-fragment-shader" );
         gl.useProgram( program );
         ambientProduct = mult(lightAmbient, materialAmbient);
