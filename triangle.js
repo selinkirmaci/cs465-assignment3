@@ -22,7 +22,7 @@ var right = 12.0;
 var ytop =12.0;
 var bottom = -12.0;
     
-var lightPosition = vec4(1.0, 1.0, 1.0, 0.0 );
+var lightPosition = vec4(1.0, -1.0, 0.0, 0.0 );
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
 var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
 var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -183,25 +183,37 @@ window.onload = function init() {
         render();
     
     }
-    document.getElementById("Button7").onclick = function(){
+    document.getElementById( "phongButton" ).onclick = function () {
+        console.log("phongButton");
+        buttonMode = 2;
+
+        
         canvas = document.getElementById( "gl-canvas" );
     
         gl = WebGLUtils.setupWebGL( canvas );
         if ( !gl ) { alert( "WebGL isn't available" ); }
 
+        //createTorus(2,5,10,5);
+        console.log("points.length = " + points.length);
+        //adjustPoints(180,11);
+    
         gl.viewport( 0, 0, canvas.width, canvas.height );
-        gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
+        gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
         
         gl.enable(gl.DEPTH_TEST);
+    
+        //
+        //  Load shaders and initialize attribute buffers
+        //
         program = initShaders( gl, "phong-vertex-shader", "phong-fragment-shader" );
         gl.useProgram( program );
+        
+    
         ambientProduct = mult(lightAmbient, materialAmbient);
         diffuseProduct = mult(lightDiffuse, materialDiffuse);
         specularProduct = mult(lightSpecular, materialSpecular);
-
-        createTorus(2,5,10,5,0.6,0.75,0.35);
-        adjustPoints(180,11);
-
+    
+            
         var nBuffer = gl.createBuffer();
         gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
         gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
@@ -209,8 +221,8 @@ window.onload = function init() {
         var vNormal = gl.getAttribLocation( program, "vNormal" );
         gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
         gl.enableVertexAttribArray( vNormal);
-
-        var vBuffer = gl.createBuffer();
+    
+    
         gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW);
         
@@ -221,27 +233,21 @@ window.onload = function init() {
         modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
         projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
         normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
-
-        document.getElementById("Button0").onclick = function(){radius *= 2.0;};
-        document.getElementById("Button1").onclick = function(){radius *= 0.5;};
-        document.getElementById("Button2").onclick = function(){theta += dr;};
-        document.getElementById("Button3").onclick = function(){theta -= dr;};
-        document.getElementById("Button4").onclick = function(){phi += dr;};
-        document.getElementById("Button5").onclick = function(){phi -= dr;};
-
-
+    
+    
         gl.uniform4fv( gl.getUniformLocation(program, 
-        "ambientProduct"),flatten(ambientProduct) );
+           "ambientProduct"),flatten(ambientProduct) );
         gl.uniform4fv( gl.getUniformLocation(program, 
-        "diffuseProduct"),flatten(diffuseProduct) );
+           "diffuseProduct"),flatten(diffuseProduct) );
         gl.uniform4fv( gl.getUniformLocation(program, 
-        "specularProduct"),flatten(specularProduct) );	
+           "specularProduct"),flatten(specularProduct) );	
         gl.uniform4fv( gl.getUniformLocation(program, 
-        "lightPosition"),flatten(lightPosition) );
+           "lightPosition"),flatten(lightPosition) );
         gl.uniform1f( gl.getUniformLocation(program, 
-        "shininess"),materialShininess );
+           "shininess"),materialShininess );
+    
         render();
-    }  
+    }
 
     
 }
