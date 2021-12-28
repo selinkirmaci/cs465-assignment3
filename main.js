@@ -73,7 +73,7 @@ var vd = vec4(0.816497, -0.471405, 0.333333,1);
 var colorChosen;
 
 //lighting variables    
-var lightPosition = vec4(0.0, 1.0, 0.0, 0.0 );
+var lightPosition = vec4(-1.0, 0.0, 0.0, 0.0 );
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );  //shadow of the shape
 var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
 var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -236,6 +236,7 @@ window.onload = function init()
     gl.activeTexture( gl.TEXTURE0 );
     gl.uniform1i(gl.getUniformLocation(program, "texMap"),0); 
     */
+
     
     projectionMatrix = ortho(-15, 15, -15, 15, -100, 100);
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
@@ -323,8 +324,6 @@ window.onload = function init()
 
         gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
         gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
-
-        
 
         render();
 
@@ -491,6 +490,13 @@ window.onload = function init()
 
     
     //Pick a Color
+    function componentToHex(c) {
+        var hex = c.toString(16);
+        return hex.length == 1 ? "0" + hex : hex;
+      }
+    function rgbToHex(r, g, b) {
+        return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+      }
 
     gradientSlider = document.getElementById("gradientColorRange");
     //GRadient Slider for Color Change
@@ -541,7 +547,7 @@ window.onload = function init()
         fromButtons = 0;
         var pixels = new Uint8Array(4);
 
-        gl_gradient.readPixels((event.clientX - 900), (900 - event.clientY), 1, 1, gl_gradient.RGBA, gl_gradient.UNSIGNED_BYTE, pixels);
+        gl_gradient.readPixels((event.clientX - 900), (700 - event.clientY), 1, 1, gl_gradient.RGBA, gl_gradient.UNSIGNED_BYTE, pixels);
 
         console.log((event.clientY));
 
@@ -572,7 +578,7 @@ window.onload = function init()
         gl.uniform1f( gl.getUniformLocation(program, 
             "shininess"),materialShininess );
     
-        document.getElementById("cardColor").style.backgroundColor = 'red';
+        document.getElementById("cardColor").style.backgroundColor = rgbToHex(pixels[0],pixels[1],pixels[2]);;
 
         render();
     });
