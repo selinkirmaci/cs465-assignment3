@@ -47,7 +47,27 @@ var at = vec3(0.0, 0.0, 0.0);
 var up = vec3(0.0, 1.0, 0.0);
 
 let a = 15;
+var texCoordsArray = [];
 
+var latitude = [];
+var longitude = [];
+var tempPoint_1 = [];
+var tempPoint_2 = [];
+
+//envireoment mapping
+var red = new Uint8Array([255, 0, 0, 255]);
+var green = new Uint8Array([0, 255, 0, 255]);
+var blue = new Uint8Array([0, 0, 255, 255]);
+var cyan = new Uint8Array([0, 255, 255, 255]);
+var magenta = new Uint8Array([255, 0, 255, 255]);
+var yellow = new Uint8Array([255, 255, 0, 255]);
+
+var cubeMap;
+
+var va = vec4(0.0, 0.0, -1.0,1);
+var vb = vec4(0.0, 0.942809, 0.333333, 1);
+var vc = vec4(-0.816497, -0.471405, 0.333333, 1);
+var vd = vec4(0.816497, -0.471405, 0.333333,1);
 
 //Color Picker
 var colorChosen;
@@ -66,6 +86,7 @@ var materialShininess = 20.0;
 var ambientColor, diffuseColor, specularColor;
 
 var normalMatrix, normalMatrixLoc;
+var texSize = 128;
 
 
 function triangle(a, b, c) {
@@ -84,8 +105,71 @@ function triangle(a, b, c) {
     outerSurfacePoints.push(a);
     outerSurfacePoints.push(b);      
     outerSurfacePoints.push(c);
+
 }
 
+function textTriangle(a, b) { 
+
+    texCoordsArray.push(a);
+    texCoordsArray.push(b);      
+}
+
+var image1 = new Array()
+    for (var i =0; i<texSize; i++)  image1[i] = new Array();
+    for (var i =0; i<texSize; i++) 
+        for ( var j = 0; j < texSize; j++) 
+           image1[i][j] = new Float32Array(4);
+    for (var i =0; i<texSize; i++) for (var j=0; j<texSize; j++) {
+        var c = (((i & 0x8) == 0) ^ ((j & 0x8)  == 0));
+        image1[i][j] = [c, c, c, 1];
+    }
+
+// Convert floats to ubytes for texture
+
+var image2 = new Uint8Array(4*texSize*texSize);
+
+    for ( var i = 0; i < texSize; i++ ) 
+        for ( var j = 0; j < texSize; j++ ) 
+           for(var k =0; k<4; k++) 
+                image2[4*texSize*i+4*j+k] = 255*image1[i][j][k];
+        
+
+
+function configureTexture(image) {
+    texture = gl.createTexture();
+    gl.activeTexture( gl.TEXTURE0 );
+    gl.bindTexture( gl.TEXTURE_2D, texture );
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texSize, texSize, 0, 
+        gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.generateMipmap( gl.TEXTURE_2D );
+    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, 
+        gl.NEAREST_MIPMAP_LINEAR );
+    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
+}
+
+function configureCubeMap() {
+
+    cubeMap = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X ,0,gl.RGBA,
+       1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, red);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X ,0,gl.RGBA,
+       1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, green);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y ,0,gl.RGBA,
+       1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, blue);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y ,0,gl.RGBA,
+       1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, cyan);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z ,0,gl.RGBA,
+       1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, yellow);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z ,0,gl.RGBA,
+       1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, magenta);
+    
+
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+}
 
 window.onload = function init()
 {
@@ -97,7 +181,6 @@ window.onload = function init()
     gl_gradient = WebGLUtils.setupWebGL(gradientCanvas);
 
     if ( !gl ) { alert( "WebGL isn't available" ); }
-
 
     
     var verticesGradient = [
@@ -117,6 +200,7 @@ window.onload = function init()
     createTorus(pAngle,q1Angle,q2Angle,qAngle,radius);
     console.log("points.length = " + points.length);
     adjustPoints(180,11);
+    //adjustTextureCoor(1440,11);
 
     createPath(2,5,10,5);
 
@@ -167,6 +251,19 @@ window.onload = function init()
     projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
     normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
 
+    var tBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer);
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW );
+    var vTexCoord = gl.getAttribLocation( program, "vTexCoord");
+    gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vTexCoord);
+
+    configureTexture(image2);
+    /*
+    configureCubeMap();
+    gl.activeTexture( gl.TEXTURE0 );
+    gl.uniform1i(gl.getUniformLocation(program, "texMap"),0); 
+    */
     
     projectionMatrix = ortho(-15, 15, -15, 15, -100, 100);
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
@@ -550,6 +647,16 @@ window.onload = function init()
 
 }
 
+function adjustTextureCoor(number_of_points_on_knot_curve, number_of_points_on_each_circle){
+    for( i = 0; i <= 1; i += 1/number_of_points_on_knot_curve){
+        for(j = 0; j <= 1; j += 1/number_of_points_on_each_circle){
+            texCoordsArray.push(vec2(j,i));
+        }
+    }
+}
+
+
+
 function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
 
     triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1],
@@ -570,6 +677,8 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
         triangle(points[i], 
                 points[i + 1],
                 points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
+
+
     }
 
     for(i = 0; i < number_of_points_on_knot_curve - 1; i++){
@@ -582,6 +691,7 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
             triangle(points[i*number_of_points_on_each_circle + j+1] , 
                 points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle], 
                 points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1]);  
+
         }
 
         triangle(points[i*number_of_points_on_each_circle + j],
@@ -593,6 +703,8 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
                 points[i*number_of_points_on_each_circle + j + 1]);
 
     }    
+
+
 }
 
 function createTorus(p, q1, q2, q, radius) 
