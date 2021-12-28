@@ -40,43 +40,42 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
             triangle(points[i*number_of_points_on_each_circle + j],
                     points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],
                     points[i*number_of_points_on_each_circle + j+1]);// sağ el kuralı
-                    texCoordsArray.push(vec2(i/180,j/11));
-                    texCoordsArray.push(vec2(i/180,j/11));
-                    texCoordsArray.push(vec2(i/180,j/11));
+                    texCoordsArray.push(vec2(i/179,j/10));
+                    texCoordsArray.push(vec2(i/179,j/10));
+                    texCoordsArray.push(vec2(i/179,j/10));
             triangle(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],
                     points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1],
                     points[i*number_of_points_on_each_circle + j+1] );// sağ el kuralı
-                    texCoordsArray.push(vec2(i/180,j/11));
-                    texCoordsArray.push(vec2(i/180,j/11));
-                    texCoordsArray.push(vec2(i/180,j/11));
+                    texCoordsArray.push(vec2(i/179,j/10));
+                    texCoordsArray.push(vec2(i/179,j/10));
+                    texCoordsArray.push(vec2(i/179,j/10));
         }
         triangle(points[i*number_of_points_on_each_circle + j],
                 points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle],
                 points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]); // sağ el kuralı
-                texCoordsArray.push(vec2(i/180,1));
-                texCoordsArray.push(vec2(i/180,1));
-                texCoordsArray.push(vec2(i/180,1));
+                texCoordsArray.push(vec2(i/179,1));
+                texCoordsArray.push(vec2(i/179,1));
+                texCoordsArray.push(vec2(i/179,1));
         triangle(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],
                 points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],
                 points[i*number_of_points_on_each_circle + j + 1]);// sağ el kuralı
-                texCoordsArray.push(vec2(i/180,1));
-                texCoordsArray.push(vec2(i/180,1));
-                texCoordsArray.push(vec2(i/180,1));
-
+                texCoordsArray.push(vec2(i/179,1));
+                texCoordsArray.push(vec2(i/179,1));
+                texCoordsArray.push(vec2(i/179,1));
     }    
     for(i = 0; i < number_of_points_on_each_circle - 1; i++){
         triangle(points[i],
                 points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],
                 points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i]);// sağ el kuralı
-                texCoordsArray.push(vec2(1,i/11));
-                texCoordsArray.push(vec2(1,i/11));
-                texCoordsArray.push(vec2(1,i/11));
+                texCoordsArray.push(vec2(1,i/10));
+                texCoordsArray.push(vec2(1,i/10));
+                texCoordsArray.push(vec2(1,i/10));
         triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],
                 points[i],
                 points[i + 1]);// sağ el kuralı
-                texCoordsArray.push(vec2(1,i/11));
-                texCoordsArray.push(vec2(1,i/11));
-                texCoordsArray.push(vec2(1,i/11));
+                texCoordsArray.push(vec2(1,i/10));
+                texCoordsArray.push(vec2(1,i/10));
+                texCoordsArray.push(vec2(1,i/10));
     }
     triangle(points[number_of_points_on_each_circle - 1],
             points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle],
@@ -121,7 +120,7 @@ function createTorus(p, q1, q2, m1,r1,r2,s1)
     
 }
 
-var texSize = 2048;
+var texSize = 512;
 
 // Create a checkerboard pattern using floats
 
