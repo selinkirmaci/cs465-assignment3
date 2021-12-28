@@ -482,6 +482,7 @@ window.onload = function init()
         var bg = pixels[1] / 256;
         var bb = pixels[2] / 256;
 
+
         colorChosen = vec4(br, bg, bb, 1.0);
 
         materialAmbient = colorChosen;
@@ -502,6 +503,7 @@ window.onload = function init()
         gl.uniform1f( gl.getUniformLocation(program, 
             "shininess"),materialShininess );
     
+        document.getElementById("cardColor").style.backgroundColor = 'red';
 
         render();
     });
