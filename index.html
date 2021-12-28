@@ -1,14 +1,9 @@
 <!DOCTYPE html>
 <html>
-<style type="text/css">
-    canvas { background: blue; }
-</style>
 
 <button id = "ButtonX">Rotate X</button>
 <button id = "ButtonY">Rotate Y</button>
 <button id = "ButtonZ">Rotate Z</button>
-
-
 
 
 <script id="vertex-shader" type="x-shader/x-vertex">
@@ -42,11 +37,12 @@ void main()
 		    s.y, 0.0,  c.y, 0.0,
 		    0.0, 0.0,  0.0, 1.0 );
 
+
     mat4 rz = mat4( c.z, -s.z, 0.0, 0.0,
 		    s.z,  c.z, 0.0, 0.0,
 		    0.0,  0.0, 1.0, 0.0,
 		    0.0,  0.0, 0.0, 1.0 );
-                
+    
     fColor = vColor;
     fTexCoord = vTexCoord;
     gl_Position = projectionMatrix * rz * ry * rx * vPosition;
@@ -65,7 +61,7 @@ uniform sampler2D texture;
 void
 main()
 {
-    gl_FragColor = fColor * texture2D( texture, fTexCoord );
+    gl_FragColor = fColor*texture2D( texture, fTexCoord );
 }
 </script>
 
@@ -79,6 +75,5 @@ main()
 <canvas id="gl-canvas" width="512" height="512">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
-<img id = "texImage" src = "sesame.png" crossorigin= "anonymous"hidden></img>
 </body>
 </html>
