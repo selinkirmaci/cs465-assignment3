@@ -40,32 +40,56 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
             triangle(points[i*number_of_points_on_each_circle + j],
                     points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],
                     points[i*number_of_points_on_each_circle + j+1]);// sağ el kuralı
+                    texCoordsArray.push(vec2(i/180,j/11));
+                    texCoordsArray.push(vec2(i/180,j/11));
+                    texCoordsArray.push(vec2(i/180,j/11));
             triangle(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],
                     points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1],
                     points[i*number_of_points_on_each_circle + j+1] );// sağ el kuralı
+                    texCoordsArray.push(vec2(i/180,j/11));
+                    texCoordsArray.push(vec2(i/180,j/11));
+                    texCoordsArray.push(vec2(i/180,j/11));
         }
         triangle(points[i*number_of_points_on_each_circle + j],
                 points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle],
                 points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]); // sağ el kuralı
+                texCoordsArray.push(vec2(i/180,1));
+                texCoordsArray.push(vec2(i/180,1));
+                texCoordsArray.push(vec2(i/180,1));
         triangle(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1],
                 points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle],
                 points[i*number_of_points_on_each_circle + j + 1]);// sağ el kuralı
+                texCoordsArray.push(vec2(i/180,1));
+                texCoordsArray.push(vec2(i/180,1));
+                texCoordsArray.push(vec2(i/180,1));
 
     }    
     for(i = 0; i < number_of_points_on_each_circle - 1; i++){
         triangle(points[i],
                 points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],
                 points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i]);// sağ el kuralı
+                texCoordsArray.push(vec2(1,i/11));
+                texCoordsArray.push(vec2(1,i/11));
+                texCoordsArray.push(vec2(1,i/11));
         triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1],
                 points[i],
                 points[i + 1]);// sağ el kuralı
+                texCoordsArray.push(vec2(1,i/11));
+                texCoordsArray.push(vec2(1,i/11));
+                texCoordsArray.push(vec2(1,i/11));
     }
     triangle(points[number_of_points_on_each_circle - 1],
             points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle],
             points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1]);
+            texCoordsArray.push(vec2(1,1));
+            texCoordsArray.push(vec2(1,1));
+            texCoordsArray.push(vec2(1,1));
     triangle(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle],
             points[number_of_points_on_each_circle - 1],
             points[0]);// sağ el kuralı
+            texCoordsArray.push(vec2(1,1));
+            texCoordsArray.push(vec2(1,1));
+            texCoordsArray.push(vec2(1,1));
 
 }
 
@@ -97,22 +121,11 @@ function createTorus(p, q1, q2, m1,r1,r2,s1)
     
 }
 
-function adjustTextureCoor(number_of_points_on_knot_curve, number_of_points_on_each_circle){
-    var innerLoop = 0;
-    for( i = 0; i < number_of_points_on_knot_curve; i++){
-        for(j = 0; j < number_of_points_on_each_circle; j++){
-            texCoordsArray.push(vec2(i,j));
-        }
-        innerLoop++;
-    }
-    console.log(innerLoop);
-}
-
-var texSize = 64;
+var texSize = 2048;
 
 // Create a checkerboard pattern using floats
 
-    
+
 var image1 = new Array()
     for (var i =0; i<texSize; i++)  image1[i] = new Array();
     for (var i =0; i<texSize; i++) 
@@ -122,9 +135,6 @@ var image1 = new Array()
         var c = (((i & 0x8) == 0) ^ ((j & 0x8)  == 0));
         image1[i][j] = [c, c, c, 1];
     }
-
-// Convert floats to ubytes for texture
-
 var image2 = new Uint8Array(4*texSize*texSize);
 
     for ( var i = 0; i < texSize; i++ ) 
@@ -178,7 +188,6 @@ window.onload = function init() {
     createTorus(2,5,10,5,0.6, 0.75, 0.35)
     adjustPoints(180,11);
     console.log(outerSurfacePoints.length);
-    adjustTextureCoor(1080,11);
     console.log(texCoordsArray.length);
 
     var cBuffer = gl.createBuffer();
@@ -219,7 +228,7 @@ window.onload = function init() {
 
 var render = function() {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    //theta[axis] += 2.0;
+    theta[axis] += 2.0;
     gl.uniform3fv(thetaLoc, theta);
     gl.drawArrays( gl.TRIANGLES, 0, outerSurfacePoints.length );
     requestAnimFrame(render);
