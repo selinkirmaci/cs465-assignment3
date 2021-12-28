@@ -50,10 +50,9 @@ let a = 15;
 
 
 //Color Picker
+var colorChosen;
 
-//lighting variables
-
-    
+//lighting variables    
 var lightPosition = vec4(1.0, 1.0, 1.0, 0.0 );
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );  //shadow of the shape
 var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -93,7 +92,27 @@ window.onload = function init()
     canvas = document.getElementById( "gl-canvas" );
     
     gl = WebGLUtils.setupWebGL( canvas );
+
+    gradientCanvas = document.getElementById("gl-canvas-gradient");
+    gl_gradient = WebGLUtils.setupWebGL(gradientCanvas);
+
     if ( !gl ) { alert( "WebGL isn't available" ); }
+
+
+    
+    var verticesGradient = [
+        vec2(-1.0, -1.0),
+        vec2(-1.0, 1.0),
+        vec2(1.0, 1.0),
+        vec2(1.0, -1.0)
+    ];
+
+    var vertexColorsGradient = [
+        vec4(0.0, 0.0, 0.0, 1.0),  // black
+        vec4(1.0, 1.0, 1.0, 1.0),  // white
+        vec4(0.0, 0.0, 0.0, 1.0),  // black
+    ];
+
 
     createTorus(pAngle,q1Angle,q2Angle,qAngle,radius);
     console.log("points.length = " + points.length);
@@ -112,7 +131,11 @@ window.onload = function init()
     //  Load shaders and initialize attribute buffers for shading per vertex
     //
     program = initShaders( gl, "vertex-shader", "fragment-shader" );
+    var program_gradient = initShaders(gl_gradient, "vertex-shader-gradient", "fragment-shader-gradient");
+
     gl.useProgram( program );
+    gl_gradient.useProgram(program_gradient);
+
 
     
     var nBuffer = gl.createBuffer();
@@ -149,11 +172,30 @@ window.onload = function init()
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
 
     modelViewMatrix = lookAt(eye, at , up);
+    
 
     
     ambientProduct = mult(lightAmbient, materialAmbient);
     diffuseProduct = mult(lightDiffuse, materialDiffuse);
     specularProduct = mult(lightSpecular, materialSpecular);
+
+    //For gl_gradient
+
+    var vBufferGradient = gl_gradient.createBuffer();
+    gl_gradient.bindBuffer(gl_gradient.ARRAY_BUFFER, vBufferGradient);
+    gl_gradient.bufferData(gl_gradient.ARRAY_BUFFER, flatten(verticesGradient), gl_gradient.STATIC_DRAW);
+
+    var vPositionGradient = gl_gradient.getAttribLocation(program_gradient, "vPosition");
+    gl_gradient.vertexAttribPointer(vPositionGradient, 2, gl.FLOAT, false, 0, 0);
+    gl_gradient.enableVertexAttribArray(vPositionGradient);
+
+    var cBufferGradient = gl_gradient.createBuffer();
+    gl_gradient.bindBuffer(gl_gradient.ARRAY_BUFFER, cBufferGradient);
+    gl_gradient.bufferData(gl_gradient.ARRAY_BUFFER, 16 * 3000, gl_gradient.STATIC_DRAW);
+
+    var vColorGradient = gl_gradient.getAttribLocation(program_gradient, "vColor");
+    gl_gradient.vertexAttribPointer(vColorGradient, 4, gl.FLOAT, false, 0, 0);
+    gl_gradient.enableVertexAttribArray(vColorGradient);
 
 
     gl.uniform4fv( gl.getUniformLocation(program, 
@@ -213,10 +255,11 @@ window.onload = function init()
         gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
         gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
 
+        
+
         render();
 
-    };
-    
+    };   
 
     
     document.getElementById( "pathButton" ).onclick = function () {
@@ -287,6 +330,8 @@ window.onload = function init()
         
         projectionMatrix = ortho(-15, 15, -15, 15, -100, 100);
         gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+
+        
 
         modelViewMatrix = lookAt(eye, at , up);
 
@@ -375,11 +420,91 @@ window.onload = function init()
         render();
     };
 
-    document.getElementById('colorPicker').addEventListener('init', (instance) => {
-        console.log('Event: "init"', instance);
-    });
+    
+    //Pick a Color
+
+    gradientSlider = document.getElementById("gradientColorRange");
+    //GRadient Slider for Color Change
+    gradientSlider.onchange = function () {
+        hue = event.srcElement.value;
+        gl_gradient.bindBuffer(gl_gradient.ARRAY_BUFFER, cBufferGradient);
+
+        var c = 1.0;
+        var x = c * (1.0 - Math.abs(((hue / 60.0) % 2) - 1.0));
+        var m = 0.0;
+        if (hue <= 60) {
+            rC = c;
+            gC = x;
+            bC = 0;
+        } else if (hue <= 120) {
+            rC = x;
+            gC = c;
+            bC = 0;
+
+        } else if (hue <= 180) {
+            rC = 0;
+            gC = c;
+            bC = x;
+
+        } else if (hue <= 240) {
+            rC = 0;
+            gC = x;
+            bC = c;
+
+        } else if (hue <= 300) {
+            rC = x;
+            gC = 0;
+            bC = c;
+        } else if (hue <= 360) {
+            rC = c;
+            gC = 0;
+            bC = x;
+        }
+
+        var rColor = vec4(rC, gC, bC, 1.0);
+        colorG = [vertexColorsGradient[0], vertexColorsGradient[1], rColor, vertexColorsGradient[2]];
+        gl_gradient.bufferData(gl_gradient.ARRAY_BUFFER, flatten(colorG), gl_gradient.STATIC_DRAW);
+        render();
+    };
+
+    gradientCanvas.addEventListener("mousedown", function (event) {
+        render();
+        fromButtons = 0;
+        var pixels = new Uint8Array(4);
+
+        gl_gradient.readPixels((event.clientX - 900), (900 - event.clientY), 1, 1, gl_gradient.RGBA, gl_gradient.UNSIGNED_BYTE, pixels);
+
+        console.log((event.clientY));
+
+        console.log(pixels);
+
+        var br = pixels[0] / 256;
+        var bg = pixels[1] / 256;
+        var bb = pixels[2] / 256;
+
+        colorChosen = vec4(br, bg, bb, 1.0);
+
+        materialAmbient = colorChosen;
+        materialDiffuse = colorChosen;
+        ambientProduct = mult(lightAmbient, materialAmbient);
+        diffuseProduct = mult(lightDiffuse, materialDiffuse);
+        specularProduct = mult(lightSpecular, materialSpecular);
+
+        
+        gl.uniform4fv( gl.getUniformLocation(program, 
+            "ambientProduct"),flatten(ambientProduct) );
+        gl.uniform4fv( gl.getUniformLocation(program, 
+            "diffuseProduct"),flatten(diffuseProduct) );
+        gl.uniform4fv( gl.getUniformLocation(program, 
+            "specularProduct"),flatten(specularProduct) );	
+        gl.uniform4fv( gl.getUniformLocation(program, 
+            "lightPosition"),flatten(lightPosition) );
+        gl.uniform1f( gl.getUniformLocation(program, 
+            "shininess"),materialShininess );
     
 
+        render();
+    });
 
     //zoom in and out
     canvas.addEventListener("wheel", function (event) {
@@ -518,7 +643,9 @@ function createPath(p, q1, q2, q)
 function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl_gradient.clear(gl_gradient.COLOR_BUFFER_BIT);
 
+    gl_gradient.drawArrays(gl_gradient.TRIANGLE_FAN, 0, 4);
     
     //gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
 
