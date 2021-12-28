@@ -18,6 +18,7 @@
     uniform vec4 lightPosition;
     uniform float shininess;
     uniform mat3 normalMatrix;
+
     
     
 void
@@ -70,8 +71,8 @@ main()
 
     gl_Position = projectionMatrix * modelViewMatrix * vPosition;
     
-    //fColor = ambient + diffuse +specular;
-    fColor = vec4(1.0,0.3,0.4,1.0);
+    fColor = ambient + diffuse +specular;
+    //fColor = vec4(1.0,0.3,0.4,1.0);
     fTexCoord = vTexCoord;
 
     fColor.a = 1.0;
