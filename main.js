@@ -200,7 +200,7 @@ window.onload = function init()
     createTorus(pAngle,q1Angle,q2Angle,qAngle,radius);
     console.log("points.length = " + points.length);
     adjustPoints(180,11);
-    //adjustTextureCoor(1440,11);
+    adjustTextureCoor(1080,11);
 
     createPath(2,5,10,5);
 
@@ -648,13 +648,15 @@ window.onload = function init()
 }
 
 function adjustTextureCoor(number_of_points_on_knot_curve, number_of_points_on_each_circle){
-    for( i = 0; i <= 1; i += 1/number_of_points_on_knot_curve){
-        for(j = 0; j <= 1; j += 1/number_of_points_on_each_circle){
-            texCoordsArray.push(vec2(j,i));
+    var innerLoop = 0;
+    for( i = 0; i < number_of_points_on_knot_curve; i+=1){
+        for(j = 0; j < number_of_points_on_each_circle; j+=4){
+            //texCoordsArray.push(vec2(4*i,4*j));
         }
+        innerLoop++;
     }
+    console.log(innerLoop);
 }
-
 
 
 function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
@@ -677,7 +679,6 @@ function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_c
         triangle(points[i], 
                 points[i + 1],
                 points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
-
 
     }
 
