@@ -1,171 +1,84 @@
 <!DOCTYPE html>
 <html>
+<style type="text/css">
+    canvas { background: blue; }
+</style>
 
-<script id="gouraud-vertex-shader" type="x-shader/x-vertex">
+<button id = "ButtonX">Rotate X</button>
+<button id = "ButtonY">Rotate Y</button>
+<button id = "ButtonZ">Rotate Z</button>
 
-// assume both position and normal are in homogeneous form
 
-attribute vec4 vPosition;
-attribute vec4 vNormal;
+
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute  vec4 vPosition;
+attribute  vec4 vColor;
+attribute  vec2 vTexCoord;
 
 varying vec4 fColor;
+varying vec2 fTexCoord;
 
-
-uniform vec4 ambientProduct, diffuseProduct, specularProduct;
-uniform mat4 modelViewMatrix;
+uniform vec3 theta;
 uniform mat4 projectionMatrix;
-uniform vec4 lightPosition;
-uniform float shininess;
-uniform mat3 normalMatrix;
 
-
-void
-main()
+void main() 
 {
-    
-    // pos is vertex position in eye coordinates
-    
-    vec3 pos = (modelViewMatrix * vPosition).xyz;
-    
-    // vector from vertex position to light source
-    
-    vec3 L;
-    
-    // check for directional light
-    
-    if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
-    else L = normalize( lightPosition.xyz - pos );
+    // Compute the sines and cosines of theta for each of
+    //   the three axes in one computation.
+    vec3 angles = radians( theta );
+    vec3 c = cos( angles );
+    vec3 s = sin( angles );
 
-    // Because the eye point the is at the orgin
-    // the vector from the vertex position to the eye is
-    	
-    vec3 E = -normalize( pos );
-    
-    // halfway vector
-    
-    vec3 H = normalize( L + E );
+    // Remeber: thse matrices are column-major
+    mat4 rx = mat4( 1.0,  0.0,  0.0, 0.0,
+		    0.0,  c.x,  s.x, 0.0,
+		    0.0, -s.x,  c.x, 0.0,
+		    0.0,  0.0,  0.0, 1.0 );
 
-    // Transform vertex normal into eye coordinates
-    
-    vec3 N = normalize( normalMatrix*vNormal.xyz);
+    mat4 ry = mat4( c.y, 0.0, -s.y, 0.0,
+		    0.0, 1.0,  0.0, 0.0,
+		    s.y, 0.0,  c.y, 0.0,
+		    0.0, 0.0,  0.0, 1.0 );
 
-    // Compute terms in the illumination equation
-    vec4 ambient = ambientProduct;
-
-    float Kd = max( dot(L, N), 0.0 );
-    vec4  diffuse = Kd*diffuseProduct;
-
-    float Ks = pow( max(dot(N, H), 0.0), shininess );
-    vec4  specular = Ks * specularProduct;
-    
-    if( dot(L, N) < 0.0 ) {
-	specular = vec4(0.0, 0.0, 0.0, 1.0);
-    } 
-
-    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-    
-    fColor = ambient + diffuse +specular;
-
-    fColor.a = 1.0;
-}
+    mat4 rz = mat4( c.z, -s.z, 0.0, 0.0,
+		    s.z,  c.z, 0.0, 0.0,
+		    0.0,  0.0, 1.0, 0.0,
+		    0.0,  0.0, 0.0, 1.0 );
+                
+    fColor = vColor;
+    fTexCoord = vTexCoord;
+    gl_Position = projectionMatrix * rz * ry * rx * vPosition;
+} 
 </script>
 
-<script id="gouraud-fragment-shader" type="x-shader/x-fragment">
+<script id="fragment-shader" type="x-shader/x-fragment">
 
 precision mediump float;
 
 varying vec4 fColor;
+varying  vec2 fTexCoord;
+
+uniform sampler2D texture;
 
 void
 main()
 {
-
-    gl_FragColor = fColor;
-
+    gl_FragColor = fColor * texture2D( texture, fTexCoord );
 }
 </script>
-<script id="phong-vertex-shader" type="x-shader/x-vertex">
-
-  attribute vec4 vPosition;
-  attribute vec4 vNormal;
-  varying vec3 N, L, E;
-  uniform mat4 modelViewMatrix;
-  uniform mat4 projectionMatrix;
-  uniform vec4 lightPosition;
-  uniform mat3 normalMatrix;
-  
-  void main()
-  {
-      vec3 pos = (modelViewMatrix * vPosition).xyz;
-      
-      // check for directional light
-      
-      if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
-      else L = normalize( lightPosition.xyz - pos );
-      
-      E =  -normalize(pos);
-      N = normalize( normalMatrix*vNormal.xyz);
-  
-      gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-      
-  }
-  </script>
-  
-  <script id="phong-fragment-shader" type="x-shader/x-fragment">
-  
-  precision mediump float;
-  
-  uniform vec4 ambientProduct;
-  uniform vec4 diffuseProduct;
-  uniform vec4 specularProduct;
-  uniform float shininess;
-  varying vec3 N, L, E;
-  
-  void main()
-  {    
-      vec4 fColor;
-      
-      vec3 H = normalize( L + E );
-      vec4 ambient = ambientProduct;
-  
-      float Kd = max( dot(L, N), 0.0 );
-      vec4  diffuse = Kd*diffuseProduct;
-  
-      float Ks = pow( max(dot(N, H), 0.0), shininess );
-      vec4  specular = Ks * specularProduct;
-      
-      if( dot(L, N) < 0.0 ) specular = vec4(0.0, 0.0, 0.0, 1.0);
-  
-      fColor = ambient + diffuse +specular;
-      fColor.a = 1.0;
-  
-      gl_FragColor = fColor;
-  }
-  </script>
-<p> </p>
-<button id = "Button0">Increase R</button>
-<button id = "Button1">Decrease R</button>
-
-<p> </p>
-<button id = "Button2">Increase theta</button>
-<button id = "Button3">Decrease theta</button>
-<button id = "Button4">Increase phi</button>
-<button id = "Button5">Decrease phi</button>
-<p> </p>
-<button id = "Button6">Gouraud</button>
-<button id = "phongButton">Phong</button>
-
-<p></p>
 
 <script type="text/javascript" src="Common/webgl-utils.js"></script>
 <script type="text/javascript" src="Common/initShaders.js"></script>
-
 <script type="text/javascript" src="Common/MV.js"></script>
 <script type="text/javascript" src="triangle.js"></script>
+
 
 <body>
 <canvas id="gl-canvas" width="512" height="512">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
+<img id = "texImage" src = "sesame.png" crossorigin= "anonymous"hidden></img>
 </body>
 </html>

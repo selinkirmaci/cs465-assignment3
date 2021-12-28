@@ -1,51 +1,23 @@
-var points = [];
-var outerSurfacePoints = [];
-var colors = [];
-
-var lines = false;
-
 var canvas;
 var gl;
+
+var points = [];
+var outerSurfacePoints = [];
+
+var texSize = 64;
+
 var program;
 
-var normalsArray = [];
+var pointsArray = [];
+var colorsArray = [];
+var texCoordsArray = [];
 
-var near = -10;
-var far = 10;
-var radius = 1.5;
-var theta  = 2.5;
-var phi    = 0.0;
-var dr = 5.0 * Math.PI/180.0;
+var projectionMatrix = [];
 
-var left = -12.0;
-var right = 12.0;
-var ytop =12.0;
-var bottom = -12.0;
-    
-var lightPosition = vec4(1.0, -1.0, 0.0, 0.0 );
-var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
-var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
-var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
+var texture;
 
-var materialAmbient = vec4( 1.0, 0.0, 1.0, 1.0 );
-var materialDiffuse = vec4( 1.0, 0.8, 0.0, 1.0 );
-var materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
-var materialShininess = 20.0;
-
-var ctm;
-var ambientColor, diffuseColor, specularColor;
-
-var modelViewMatrix, projectionMatrix;
-var modelViewMatrixLoc, projectionMatrixLoc;
-
-var normalMatrix, normalMatrixLoc;
-
-var eye;
-var at = vec3(0.0, 0.0, 0.0);
-var up = vec3(0.0, 1.0, 0.0);
-    
 function triangle(a, b, c) {
-
+/*
     var t1 = subtract(b, a);
     var t2 = subtract(c, a);
     var normal = normalize(cross(t2, t1));
@@ -55,240 +27,13 @@ function triangle(a, b, c) {
     normalsArray.push(normal);
     normalsArray.push(normal);
     normalsArray.push(normal);
-    
+    */
 
     outerSurfacePoints.push(a);
     outerSurfacePoints.push(b);      
     outerSurfacePoints.push(c);
 }
 
-window.onload = function init() {
-
-    canvas = document.getElementById( "gl-canvas" );
-    
-    gl = WebGLUtils.setupWebGL( canvas );
-    if ( !gl ) { alert( "WebGL isn't available" ); }
-
-    gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
-    
-    gl.enable(gl.DEPTH_TEST);
-
-    program = initShaders( gl, "gouraud-vertex-shader", "gouraud-fragment-shader" );
-    gl.useProgram( program );
-    ambientProduct = mult(lightAmbient, materialAmbient);
-    diffuseProduct = mult(lightDiffuse, materialDiffuse);
-    specularProduct = mult(lightSpecular, materialSpecular);
-
-    createTorus(2,5,10,5,0.6,0.75,0.35);
-    adjustPoints(180,11);
-
-    var nBuffer = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
-    
-    var vNormal = gl.getAttribLocation( program, "vNormal" );
-    gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vNormal);
-
-    var vBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW);
-    
-    var vPosition = gl.getAttribLocation( program, "vPosition");
-    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPosition);
-    
-    modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
-    projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
-    normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
-
-    document.getElementById("Button0").onclick = function(){radius *= 2.0;};
-    document.getElementById("Button1").onclick = function(){radius *= 0.5;};
-    document.getElementById("Button2").onclick = function(){theta += dr;};
-    document.getElementById("Button3").onclick = function(){theta -= dr;};
-    document.getElementById("Button4").onclick = function(){phi += dr;};
-    document.getElementById("Button5").onclick = function(){phi -= dr;};
-
-
-    gl.uniform4fv( gl.getUniformLocation(program, 
-    "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program, 
-    "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program, 
-    "specularProduct"),flatten(specularProduct) );	
-    gl.uniform4fv( gl.getUniformLocation(program, 
-    "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program, 
-    "shininess"),materialShininess );
-    render();
-    
-    document.getElementById("Button6").onclick = function(){
-        canvas = document.getElementById( "gl-canvas" );
-    
-        gl = WebGLUtils.setupWebGL( canvas );
-        if ( !gl ) { alert( "WebGL isn't available" ); }
-
-        gl.viewport( 0, 0, canvas.width, canvas.height );
-        gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
-        
-        gl.enable(gl.DEPTH_TEST);
-        program = initShaders( gl, "gouraud-vertex-shader", "gouraud-fragment-shader" );
-        gl.useProgram( program );
-        ambientProduct = mult(lightAmbient, materialAmbient);
-        diffuseProduct = mult(lightDiffuse, materialDiffuse);
-        specularProduct = mult(lightSpecular, materialSpecular);
-
-        createTorus(2,5,10,5,0.6,0.75,0.35);
-        adjustPoints(180,11);
-
-        var nBuffer = gl.createBuffer();
-        gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
-        gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
-        
-        var vNormal = gl.getAttribLocation( program, "vNormal" );
-        gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
-        gl.enableVertexAttribArray( vNormal);
-
-        var vBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW);
-        
-        var vPosition = gl.getAttribLocation( program, "vPosition");
-        gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(vPosition);
-        
-        modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
-        projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
-        normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
-
-        document.getElementById("Button0").onclick = function(){radius *= 2.0;};
-        document.getElementById("Button1").onclick = function(){radius *= 0.5;};
-        document.getElementById("Button2").onclick = function(){theta += dr;};
-        document.getElementById("Button3").onclick = function(){theta -= dr;};
-        document.getElementById("Button4").onclick = function(){phi += dr;};
-        document.getElementById("Button5").onclick = function(){phi -= dr;};
-
-
-        gl.uniform4fv( gl.getUniformLocation(program, 
-        "ambientProduct"),flatten(ambientProduct) );
-        gl.uniform4fv( gl.getUniformLocation(program, 
-        "diffuseProduct"),flatten(diffuseProduct) );
-        gl.uniform4fv( gl.getUniformLocation(program, 
-        "specularProduct"),flatten(specularProduct) );	
-        gl.uniform4fv( gl.getUniformLocation(program, 
-        "lightPosition"),flatten(lightPosition) );
-        gl.uniform1f( gl.getUniformLocation(program, 
-        "shininess"),materialShininess );
-        render();
-    
-    }
-    document.getElementById( "phongButton" ).onclick = function () {
-        console.log("phongButton");
-        buttonMode = 2;
-
-        
-        canvas = document.getElementById( "gl-canvas" );
-    
-        gl = WebGLUtils.setupWebGL( canvas );
-        if ( !gl ) { alert( "WebGL isn't available" ); }
-
-        //createTorus(2,5,10,5);
-        console.log("points.length = " + points.length);
-        //adjustPoints(180,11);
-    
-        gl.viewport( 0, 0, canvas.width, canvas.height );
-        gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
-        
-        gl.enable(gl.DEPTH_TEST);
-    
-        //
-        //  Load shaders and initialize attribute buffers
-        //
-        program = initShaders( gl, "phong-vertex-shader", "phong-fragment-shader" );
-        gl.useProgram( program );
-        
-    
-        ambientProduct = mult(lightAmbient, materialAmbient);
-        diffuseProduct = mult(lightDiffuse, materialDiffuse);
-        specularProduct = mult(lightSpecular, materialSpecular);
-    
-            
-        var nBuffer = gl.createBuffer();
-        gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
-        gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
-        
-        var vNormal = gl.getAttribLocation( program, "vNormal" );
-        gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
-        gl.enableVertexAttribArray( vNormal);
-    
-    
-        gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW);
-        
-        var vPosition = gl.getAttribLocation( program, "vPosition");
-        gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(vPosition);
-        
-        modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
-        projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
-        normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
-    
-    
-        gl.uniform4fv( gl.getUniformLocation(program, 
-           "ambientProduct"),flatten(ambientProduct) );
-        gl.uniform4fv( gl.getUniformLocation(program, 
-           "diffuseProduct"),flatten(diffuseProduct) );
-        gl.uniform4fv( gl.getUniformLocation(program, 
-           "specularProduct"),flatten(specularProduct) );	
-        gl.uniform4fv( gl.getUniformLocation(program, 
-           "lightPosition"),flatten(lightPosition) );
-        gl.uniform1f( gl.getUniformLocation(program, 
-           "shininess"),materialShininess );
-    
-        render();
-    }
-
-    
-}
-
-/*function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
-    for(i = 0; i < number_of_points_on_knot_curve - 1; i++){
-        for(j = 0; j < number_of_points_on_each_circle - 1; j++){
-            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j]);
-            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+1]);
-            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
-
-            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+1]);
-            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
-            outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle + 1]);
-        }
-        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j]); // j = 10 yani çemberdeki 11. nokta  yani indexi 10
-        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]); // index 0
-        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j + number_of_points_on_each_circle]);
-
-        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j - number_of_points_on_each_circle + 1]);
-        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j + 1]);
-        outerSurfacePoints.push(points[i*number_of_points_on_each_circle + j+number_of_points_on_each_circle]);
-    }
-    // son halkayı baştakine bağlama
-    for(i = 0; i < 10; i++){
-        outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i]);
-        outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
-        outerSurfacePoints.push(points[i]);
-
-        outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + i + 1]);
-        outerSurfacePoints.push(points[i]);
-        outerSurfacePoints.push(points[i + 1]);
-    }
-    outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle + number_of_points_on_each_circle - 1])
-    outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle])
-    outerSurfacePoints.push(points[number_of_points_on_each_circle - 1])
-
-    outerSurfacePoints.push(points[(number_of_points_on_knot_curve - 1) * number_of_points_on_each_circle])
-    outerSurfacePoints.push(points[0])
-    outerSurfacePoints.push(points[number_of_points_on_each_circle - 1])
-}*/
 function adjustPoints(number_of_points_on_knot_curve, number_of_points_on_each_circle){
     for(i = 0; i < number_of_points_on_knot_curve - 1; i++){
         for(j = 0; j < number_of_points_on_each_circle - 1; j++){
@@ -339,40 +84,106 @@ function createTorus(p, q1, q2, m1,r1,r2,s1)
     
 }
 
-function render()
-{
-    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-    eye = vec3(radius*Math.sin(theta)*Math.cos(phi), 
-        radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(theta));
-
-    modelViewMatrix = lookAt(eye, at , up);
-    projectionMatrix = ortho(left, right, bottom, ytop, near, far);
-    
-    // normal matrix only really need if there is nonuniform scaling
-    // it's here for generality but since there is
-    // no scaling in this example we could just use modelView matrix in shaders
-    
-    normalMatrix = [
-        vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
-        vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
-        vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
-    ];
-            
-    gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix) );
-    gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
-    gl.uniformMatrix3fv(normalMatrixLoc, false, flatten(normalMatrix) );
-        
-    if(lines){
-        gl.drawArrays( gl.LINE_STRIP, 0, outerSurfacePoints.length );
+function adjustTextureCoor(number_of_points_on_knot_curve, number_of_points_on_each_circle){
+    for( i = 0; i <= 1; i += 1/number_of_points_on_knot_curve){
+        for(j = 0; j <= 1; j += 1/number_of_points_on_each_circle){
+            texCoordsArray.push(vec2(i,j));
+        }
     }
-    else{
+}
+var xAxis = 0;
+var yAxis = 1;
+var zAxis = 2;
+var axis = xAxis;
+var theta = [45.0, 45.0, 45.0];
 
-        gl.drawArrays( gl.TRIANGLE_STRIP, 0, outerSurfacePoints.length );
-        
-    }
+var thetaLoc;
 
-    window.requestAnimFrame(render);
+function configureTexture( image ) {
+    texture = gl.createTexture();
+    gl.bindTexture( gl.TEXTURE_2D, texture );
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGB, 
+         gl.RGB, gl.UNSIGNED_BYTE, image );
+    gl.generateMipmap( gl.TEXTURE_2D );
+    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, 
+                      gl.NEAREST_MIPMAP_LINEAR );
+    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
+    
+    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
 }
 
+window.onload = function init() {
 
+    canvas = document.getElementById( "gl-canvas" );
+    
+    gl = WebGLUtils.setupWebGL( canvas );
+    if ( !gl ) { alert( "WebGL isn't available" ); }
+
+    gl.viewport( 0, 0, canvas.width, canvas.height );
+    gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
+    
+    gl.enable(gl.DEPTH_TEST);
+
+    //
+    //  Load shaders and initialize attribute buffers
+    //
+    program = initShaders( gl, "vertex-shader", "fragment-shader" );
+    gl.useProgram( program );
+    
+    createTorus(2,5,10,5,0.6, 0.75, 0.35)
+    adjustPoints(180,11);
+    adjustTextureCoor(180,11);
+
+    var vBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW );
+    
+    var vPosition = gl.getAttribLocation( program, "vPosition" );
+    gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPosition );
+    
+    var tBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW );
+    
+    var vTexCoord = gl.getAttribLocation( program, "vTexCoord" );
+    gl.vertexAttribPointer( vTexCoord, 2, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vTexCoord );
+
+    //
+    // Initialize a texture
+    //
+
+    //var image = new Image();
+    //image.onload = function() { 
+     //   configureTexture( image );
+    //}
+    //image.src = "SA2011_black.gif"
+
+
+    var image = document.getElementById("texImage");
+ 
+    configureTexture( image );
+
+    thetaLoc = gl.getUniformLocation(program, "theta"); 
+    
+    document.getElementById("ButtonX").onclick = function(){axis = xAxis;};
+    document.getElementById("ButtonY").onclick = function(){axis = yAxis;};
+    document.getElementById("ButtonZ").onclick = function(){axis = zAxis;};
+       
+    render();
+
+    projectionMatrix = ortho(-15,15,-15,15,-15,15);
+    var projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
+    gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
+ 
+}
+
+var render = function(){
+    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    theta[axis] += 2.0;
+    gl.uniform3fv(thetaLoc, flatten(theta));
+    gl.drawArrays( gl.TRIANGLES, 0, outerSurfacePoints.length );
+    requestAnimFrame(render);
+}
