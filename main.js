@@ -335,7 +335,7 @@ window.onload = function init()
 
 
 
-        createTorus(pAngle,q1Angle,q2AngleValue,qAngle,radius1, radius2, s1)
+        createTorus(pAngle,q1Angle,q2AngleValue,qAngle,radius1, radius2, s1Value)
         adjustPoints(180,11);
     
         createPath(pAngle,q1Angle,q2AngleValue,qAngle);
