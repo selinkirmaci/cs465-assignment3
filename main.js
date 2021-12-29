@@ -2,7 +2,7 @@ var canvas;
 var gl;
 var program;
 
-var vBuffer,nBuffer,cBuffer;
+var vBuffer,nBuffer,cBuffer,vNormal,vColor,vPosition,tBuffer,vTexCoord;
 
 var NumVertices  = 36;
 
@@ -201,11 +201,11 @@ window.onload = function init()
 
 
     
-    var nBuffer = gl.createBuffer();
+    nBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
     
-    var vNormal = gl.getAttribLocation( program, "vNormal" );
+    vNormal = gl.getAttribLocation( program, "vNormal" );
     gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vNormal);
 
@@ -213,7 +213,7 @@ window.onload = function init()
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
 
-    var vColor = gl.getAttribLocation( program, "vColor" );
+    vColor = gl.getAttribLocation( program, "vColor" );
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vColor );
 
@@ -222,7 +222,7 @@ window.onload = function init()
     gl.bufferData( gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW );
     
 
-    var vPosition = gl.getAttribLocation( program, "vPosition" );
+    vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
@@ -230,11 +230,11 @@ window.onload = function init()
     projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
     normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
 
-    var tBuffer = gl.createBuffer();
+    tBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW );
 
-    var vTexCoord = gl.getAttribLocation( program, "vTexCoord");
+    vTexCoord = gl.getAttribLocation( program, "vTexCoord");
     gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vTexCoord);
 
@@ -291,6 +291,7 @@ window.onload = function init()
      gl.uniform1f( gl.getUniformLocation(program, 
         "shininess"),materialShininess );
     
+    //=========================================== BUTTONS ==========================================================
 
     //event listeners for buttons
     document.getElementById( "applyButton" ).onclick = function () {
@@ -318,17 +319,14 @@ window.onload = function init()
         normalsArray = [];
         points = [];
         pathArray = [];
-
-        console.log(outerSurfacePoints.length);
-        console.log(radius);
-        console.log(outerSurfacePoints);
+        texCoordsArray = [];
 
 
-        createTorus(pAngle,q1Angle,q2AngleValue,qAngle,radius);
 
+        createTorus(pAngle,q1Angle,q2AngleValue,qAngle,0.6, 0.75, 0.35)
         adjustPoints(180,11);
-
-        console.log(outerSurfacePoints);
+    
+        createPath(2,5,10,5);
         
 
         gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
@@ -341,8 +339,7 @@ window.onload = function init()
 
     };   
 
-    //=========================================== BUTTONS ==========================================================
-    //Sading Buttons
+    //Shading Buttons
     
     document.getElementById( "pathButton" ).onclick = function () {
         buttonMode = 3;     
@@ -384,7 +381,7 @@ window.onload = function init()
         gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
         gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
         
-        var vNormal = gl.getAttribLocation( program, "vNormal" );
+        vNormal = gl.getAttribLocation( program, "vNormal" );
         gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
         gl.enableVertexAttribArray( vNormal);
 
@@ -392,7 +389,7 @@ window.onload = function init()
         gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
         gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
 
-        var vColor = gl.getAttribLocation( program, "vColor" );
+        vColor = gl.getAttribLocation( program, "vColor" );
         gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
         gl.enableVertexAttribArray( vColor );
 
@@ -400,7 +397,7 @@ window.onload = function init()
         gl.bufferData( gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW );
         
 
-        var vPosition = gl.getAttribLocation( program, "vPosition" );
+        vPosition = gl.getAttribLocation( program, "vPosition" );
         gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
         gl.enableVertexAttribArray( vPosition );
 
@@ -467,11 +464,11 @@ window.onload = function init()
         specularProduct = mult(lightSpecular, materialSpecular);
     
             
-        var nBuffer = gl.createBuffer();
+        nBuffer = gl.createBuffer();
         gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
         gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
         
-        var vNormal = gl.getAttribLocation( program, "vNormal" );
+        vNormal = gl.getAttribLocation( program, "vNormal" );
         gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
         gl.enableVertexAttribArray( vNormal);
     
@@ -479,7 +476,7 @@ window.onload = function init()
         gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(outerSurfacePoints), gl.STATIC_DRAW);
         
-        var vPosition = gl.getAttribLocation( program, "vPosition");
+        vPosition = gl.getAttribLocation( program, "vPosition");
         gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(vPosition);
         
@@ -487,11 +484,11 @@ window.onload = function init()
         projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
         normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
 
-        var tBuffer = gl.createBuffer();
+        tBuffer = gl.createBuffer();
         gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer);
         gl.bufferData( gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW );
 
-        var vTexCoord = gl.getAttribLocation( program, "vTexCoord");
+        vTexCoord = gl.getAttribLocation( program, "vTexCoord");
         gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(vTexCoord);
 
