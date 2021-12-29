@@ -19,63 +19,69 @@
     uniform float shininess;
     uniform mat3 normalMatrix;
 
+    uniform float lightMode;
+
     
     
 void
 main()
 {
-    
-    // pos is vertex position in eye coordinates
-    
-    vec3 pos = (modelViewMatrix * vPosition).xyz;
-    
-    // vector from vertex position to light source
-    
-    vec3 L;
-    
-    // check for directional light
-    
-    if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
-    else L = normalize( lightPosition.xyz - pos );
+   
+      // pos is vertex position in eye coordinates
+      
+      vec3 pos = (modelViewMatrix * vPosition).xyz;
+      
+      // vector from vertex position to light source
+      
+      vec3 L;
+      
+      // check for directional light
+      
+      if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
+      else L = normalize( lightPosition.xyz - pos );
 
-    // Because the eye point the is at the orgin
-    // the vector from the vertex position to the eye is
-    	
-    vec3 E = -normalize( pos );
-    
-    // halfway vector
-    
-    vec3 H = normalize( L + E );
+      // Because the eye point the is at the orgin
+      // the vector from the vertex position to the eye is
+        
+      vec3 E = -normalize( pos );
+      
+      // halfway vector
+      
+      vec3 H = normalize( L + E );
 
-    // Transform vertex normal into eye coordinates
-    
-    // vec3 N = normalize( normalMatrix*vNormal.xyz);
-    
-    // as long as there is no nonuniform scaling 
-    // we don't need the normal matrix and can use
-    
-    vec3 N = normalize((modelViewMatrix*vNormal).xyz);
+      // Transform vertex normal into eye coordinates
+      
+      // vec3 N = normalize( normalMatrix*vNormal.xyz);
+      
+      // as long as there is no nonuniform scaling 
+      // we don't need the normal matrix and can use
+      
+      vec3 N = normalize((modelViewMatrix*vNormal).xyz);
 
-    // Compute terms in the illumination equation
-    vec4 ambient = ambientProduct;
+      // Compute terms in the illumination equation
+      vec4 ambient = ambientProduct;
 
-    float Kd = max( dot(L, N), 0.0 );
-    vec4  diffuse = Kd*diffuseProduct;
+      float Kd = max( dot(L, N), 0.0 );
+      vec4  diffuse = Kd*diffuseProduct;
 
-    float Ks = pow( max(dot(N, H), 0.0), shininess );
-    vec4  specular = Ks * specularProduct;
-    
-    if( dot(L, N) < 0.0 ) {
-	specular = vec4(0.0, 0.0, 0.0, 1.0);
-    } 
+      float Ks = pow( max(dot(N, H), 0.0), shininess );
+      vec4  specular = Ks * specularProduct;
+      
+      if( dot(L, N) < 0.0 ) {
+    specular = vec4(0.0, 0.0, 0.0, 1.0);
+      } 
 
-    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-    
-    fColor = ambient + diffuse +specular;
-    //fColor = vec4(1.0,0.3,0.4,1.0);
-    fTexCoord = vTexCoord;
+      gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+      
+      if(lightMode == 1.0)
+        fColor = ambient + diffuse +specular;
+      else
+         fColor = vColor;
+         
+      fTexCoord = vTexCoord;
 
-    fColor.a = 1.0;
+      fColor.a = 1.0;
+  
 }
     </script>
     
@@ -86,12 +92,20 @@ main()
     varying vec4 fColor;
     varying  vec2 fTexCoord;
 
+    
     uniform sampler2D texture;
+    uniform float textureMode;
+
+
 
     void
     main()
     {
-        gl_FragColor = fColor*texture2D( texture, fTexCoord );;
+      if(textureMode == 1.0)
+        gl_FragColor = fColor*texture2D( texture, fTexCoord );
+      else
+        gl_FragColor = fColor;
+    
     }
     </script>
 
@@ -306,6 +320,9 @@ body {
             </div>
             <input id = "qAngle" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
           </div>
+          <div class="input-group input-group-sm mb-3" style="justify-content: center;">      
+            <button id = "applyButton" type="button" class="btn btn-secondary" style="background-color: white; color: #000;">Apply</button>
+          </div>
           <h5 class="card-title" style="color: white;">Rendering Options</h5>
           <div class="btn-group" role="group" aria-label="Basic example">
             <button id= "pathButton" type="button" class="btn btn-secondary" style="background-color: rgb(255, 255, 255); color: #000; margin-right: 5px; border-radius: 10px; width: 120px;">Path</button>
@@ -313,9 +330,14 @@ body {
             <button id= "gouraudButton" type="button" class="btn btn-secondary" style="background-color: rgb(255, 255, 255); color: #000; margin-right: 5px; border-radius: 10px;">Gouraud Shaded</button>
             <button id= "phongButton" type="button" class="btn btn-secondary" style="background-color: rgb(255, 255, 255); color: #000; margin-right: 5px; border-radius: 10px;">Phong Shaded</button>
           </div>
-
-          <button id = "applyButton" type="button" class="btn btn-secondary" style="background-color: white; color: #000;">Apply</button>
-          <button id = "switchButton" type="button" class="btn btn-secondary" style="background-color: white; color: #000;">Switch</button>
+          <div class="btn-group" role="group" aria-label="Basic example">
+            <button id= "turnOnLightButton" type="button" class="btn btn-secondary" style="background-color: rgb(255, 255, 255); color: #000; margin-right: 5px; border-radius: 10px; width: 150px;">Turn On Light</button>
+            <button id= "turnOffLightButton" type="button" class="btn btn-secondary" style="background-color: rgb(255, 255, 255); color: #000; margin-right: 5px; border-radius: 10px;width: 150px;">Turn Off Light</button>
+          </div>
+          <div class="btn-group" role="group" aria-label="Basic example">
+            <button id= "textureModeOn" type="button" class="btn btn-secondary" style="background-color: rgb(255, 255, 255); color: #000; margin-right: 5px; border-radius: 10px; width: 150px;">Texture Mode On</button>
+            <button id= "textureModeOff" type="button" class="btn btn-secondary" style="background-color: rgb(255, 255, 255); color: #000; margin-right: 5px; border-radius: 10px; width: 150px;">Texture Mode Off</button>
+          </div>
 
         </div>
 

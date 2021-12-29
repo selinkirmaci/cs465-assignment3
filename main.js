@@ -2,7 +2,7 @@ var canvas;
 var gl;
 var program;
 
-var vBuffer,nBuffer;
+var vBuffer,nBuffer,cBuffer;
 
 var NumVertices  = 36;
 
@@ -49,11 +49,6 @@ var up = vec3(0.0, 1.0, 0.0);
 let a = 15;
 var texCoordsArray = [];
 
-var latitude = [];
-var longitude = [];
-var tempPoint_1 = [];
-var tempPoint_2 = [];
-
 //envireoment mapping
 var red = new Uint8Array([255, 0, 0, 255]);
 var green = new Uint8Array([0, 255, 0, 255]);
@@ -70,7 +65,7 @@ var vc = vec4(-0.816497, -0.471405, 0.333333, 1);
 var vd = vec4(0.816497, -0.471405, 0.333333,1);
 
 //Color Picker
-var colorChosen;
+var colorChosen = vec4( 0.0, 0.0, 1.0, 1.0 );
 
 //lighting variables    
 var lightPosition = vec4(-1.0, 0.0, 0.0, 0.0 );
@@ -84,31 +79,40 @@ var materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
 var materialShininess = 20.0;
 
 var ambientColor, diffuseColor, specularColor;
+var lightOn = 1.0;
+var lightOnPointer;
 
 var normalMatrix, normalMatrixLoc;
 var texSize = 128;
 var texture;
+var textureMode = 0;
+var textureModePointer;
 
 function triangle(a, b, c) {
 
+    //calculate normals of the triangle
     var t1 = subtract(b, a);
     var t2 = subtract(c, a);
     var normal = normalize(cross(t2, t1));
     normal = vec4(normal);
 
-    
+    //push normals
     normalsArray.push(normal);
     normalsArray.push(normal);
     normalsArray.push(normal);
     
-
+    //push triangle points
     outerSurfacePoints.push(a);
     outerSurfacePoints.push(b);      
     outerSurfacePoints.push(c);
 
+    colors.push(colorChosen);
+    colors.push(colorChosen);
+    colors.push(colorChosen);
+
 }
 
-
+//configuration for texture mapping
 function configureTexture(image) {
     texture = gl.createTexture();
     gl.activeTexture( gl.TEXTURE0 );
@@ -122,6 +126,7 @@ function configureTexture(image) {
     gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
 }
 
+//configuration for enviroment mapping
 function configureCubeMap() {
 
     cubeMap = gl.createTexture();
@@ -145,6 +150,8 @@ function configureCubeMap() {
     gl.texParameteri(gl.TEXTURE_CUBE_MAP,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
 }
 
+
+//===================================================== PROGRAM INIT ==============================================================
 window.onload = function init()
 {
     canvas = document.getElementById( "gl-canvas" );
@@ -202,7 +209,7 @@ window.onload = function init()
     gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vNormal);
 
-    var cBuffer = gl.createBuffer();
+    cBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
 
@@ -226,6 +233,7 @@ window.onload = function init()
     var tBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW );
+
     var vTexCoord = gl.getAttribLocation( program, "vTexCoord");
     gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vTexCoord);
@@ -236,6 +244,10 @@ window.onload = function init()
     gl.activeTexture( gl.TEXTURE0 );
     gl.uniform1i(gl.getUniformLocation(program, "texMap"),0); 
     */
+
+    textureModePointer = gl.getUniformLocation(program, "textureMode"); 
+    lightOnPointer = gl.getUniformLocation(program, "lightMode"); 
+
 
     
     projectionMatrix = ortho(-15, 15, -15, 15, -100, 100);
@@ -329,6 +341,8 @@ window.onload = function init()
 
     };   
 
+    //=========================================== BUTTONS ==========================================================
+    //Sading Buttons
     
     document.getElementById( "pathButton" ).onclick = function () {
         buttonMode = 3;     
@@ -352,7 +366,6 @@ window.onload = function init()
         gl = WebGLUtils.setupWebGL( canvas );
         if ( !gl ) { alert( "WebGL isn't available" ); }
 
-        console.log("points.length = " + points.length);
         
 
         gl.viewport( 0, 0, canvas.width, canvas.height );
@@ -375,7 +388,7 @@ window.onload = function init()
         gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
         gl.enableVertexAttribArray( vNormal);
 
-        var cBuffer = gl.createBuffer();
+        cBuffer = gl.createBuffer();
         gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
         gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
 
@@ -407,6 +420,9 @@ window.onload = function init()
         ambientProduct = mult(lightAmbient, materialAmbient);
         diffuseProduct = mult(lightDiffuse, materialDiffuse);
         specularProduct = mult(lightSpecular, materialSpecular);
+        textureModePointer = gl.getUniformLocation(program, "textureMode"); 
+        lightOnPointer = gl.getUniformLocation(program, "lightMode"); 
+
 
 
         gl.uniform4fv( gl.getUniformLocation(program, 
@@ -488,6 +504,31 @@ window.onload = function init()
         render();
     };
 
+    // Texture Buttons
+    document.getElementById( "textureModeOn" ).onclick = function () {
+        textureMode = 1.0;     
+        gl.uniform1f(textureModePointer, textureMode);
+        render();
+    };
+    document.getElementById( "textureModeOff" ).onclick = function () {
+        textureMode = 0.0;  
+        gl.uniform1f(textureModePointer, textureMode);
+        render();
+    };
+
+    //Light Button
+    document.getElementById( "turnOnLightButton" ).onclick = function () {
+        lightOn = 1.0;     
+        gl.uniform1f(lightOnPointer, lightOn);
+        render();
+    };
+    document.getElementById( "turnOffLightButton" ).onclick = function () {
+        lightOn = 0.0;  
+        gl.uniform1f(lightOnPointer, lightOn);
+        render();
+    };
+
+
     
     //Pick a Color
     function componentToHex(c) {
@@ -558,7 +599,8 @@ window.onload = function init()
         var bb = pixels[2] / 256;
 
 
-        colorChosen = vec4(br, bg, bb, 1.0);
+        
+
 
         materialAmbient = colorChosen;
         materialDiffuse = colorChosen;
@@ -578,7 +620,15 @@ window.onload = function init()
         gl.uniform1f( gl.getUniformLocation(program, 
             "shininess"),materialShininess );
     
-        document.getElementById("cardColor").style.backgroundColor = rgbToHex(pixels[0],pixels[1],pixels[2]);;
+        document.getElementById("cardColor").style.backgroundColor = rgbToHex(pixels[0],pixels[1],pixels[2]);
+        colorChosen = vec4(br, bg, bb, 1.0);
+        colors = [];
+        for(var i = 0; i < outerSurfacePoints.length;i++)
+        {
+            colors.push(colorChosen);
+        }
+        gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
 
         render();
     });
@@ -764,6 +814,11 @@ function render()
     //eye = vec3(camRotX1,camRotY1,camRotZ1);
 
     //modelViewMatrix = lookAt(eye,at,up);
+
+    gl.uniform1f(textureModePointer, textureMode);
+    gl.uniform1f(lightOnPointer, lightOn);
+
+
     modelViewMatrix = mat4();
     modelViewMatrix = mult(modelViewMatrix, rotate(camRotX1, [1, 0, 0] ));
     modelViewMatrix = mult(modelViewMatrix, rotate(camRotY1, [0, 1, 0] ));
