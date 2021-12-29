@@ -19,7 +19,12 @@ var zAxis = 2;
 
 var axis = 0;
 
-var radius = 4;
+var radius1 = 4;
+var radius2 = 4;
+var pAngle = 2;
+var q1Angle = 5;
+var q2Angle = 10;
+var qAngle = 5;
 
 
 var flag = true;
@@ -27,10 +32,6 @@ var flag = true;
 
 let camSpeed = 2;
 
-var pAngle = 2;
-var q1Angle = 5;
-var q2Angle = 10;
-var qAngle = 5;
 
 let modelViewMatrix;
 let projectionMatrix;
@@ -297,9 +298,15 @@ window.onload = function init()
     //event listeners for buttons
     document.getElementById( "applyButton" ).onclick = function () {
         
-        var value = document.getElementById("radiusInput").value;
+        //createTorus(p, q1, q2, m1,r1,r2,s1) 
+        var value = document.getElementById("radius1Input").value;
         if(value != undefined)
-            radius = parseInt(value);
+            radius1 = parseInt(value);
+            radius1 = radius1 / 100;
+        var value = document.getElementById("radius2Input").value;
+        if(value != undefined)
+            radius2 = parseInt(value);
+            radius2 = radius2 / 100;
         var pAngleValue = document.getElementById("pAngle").value;
         if(pAngle != undefined)
             pAngle = parseInt(pAngleValue);
@@ -315,6 +322,10 @@ window.onload = function init()
         var qAngleValue = document.getElementById("qAngle").value;
         if(qAngle != undefined)
             qAngle = parseInt(qAngleValue);
+        var s1Value = document.getElementById("s1Input").value;
+        if(s1Value != undefined)
+            s1Value = parseInt(qAngleValue);
+            s1Value = s1Value / 100;
 
         outerSurfacePoints = [];
         normalsArray = [];
@@ -324,10 +335,10 @@ window.onload = function init()
 
 
 
-        createTorus(pAngle,q1Angle,q2AngleValue,qAngle,0.6, 0.75, 0.35)
+        createTorus(pAngle,q1Angle,q2AngleValue,qAngle,radius1, radius2, s1)
         adjustPoints(180,11);
     
-        createPath(2,5,10,5);
+        createPath(pAngle,q1Angle,q2AngleValue,qAngle);
         
 
         gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
