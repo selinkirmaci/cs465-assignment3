@@ -412,8 +412,6 @@ window.onload = function init()
         projectionMatrix = ortho(-15, 15, -15, 15, -100, 100);
         gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix) );
 
-        
-
         modelViewMatrix = lookAt(eye, at , up);
 
         
@@ -488,6 +486,19 @@ window.onload = function init()
         modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
         projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
         normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
+
+        var tBuffer = gl.createBuffer();
+        gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer);
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW );
+
+        var vTexCoord = gl.getAttribLocation( program, "vTexCoord");
+        gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(vTexCoord);
+
+        textureModePointer = gl.getUniformLocation(program, "textureMode"); 
+
+
+        configureTexture(image2);
     
     
         gl.uniform4fv( gl.getUniformLocation(program, 
